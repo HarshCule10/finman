@@ -7,10 +7,7 @@ import '../data/models/card_model.dart';
 class FinancialCard extends StatelessWidget {
   final CardModel card;
 
-  const FinancialCard({
-    super.key,
-    required this.card,
-  });
+  const FinancialCard({super.key, required this.card});
 
   /// Returns the masked card number in format "**** **** **** 1234"
   String _getMaskedCardNumber() {
@@ -20,7 +17,7 @@ class FinancialCard extends StatelessWidget {
   /// Returns the appropriate icon widget for the card type
   Widget _getCardTypeIcon() {
     IconData iconData;
-    
+
     switch (card.cardType) {
       case CardType.visa:
         // Using a credit card icon as placeholder for Visa
@@ -44,11 +41,7 @@ class FinancialCard extends StatelessWidget {
         break;
     }
 
-    return Icon(
-      iconData,
-      color: Colors.white.withValues(alpha: 0.9),
-      size: 32,
-    );
+    return Icon(iconData, color: Colors.white.withValues(alpha: 0.9), size: 32);
   }
 
   @override
@@ -57,7 +50,8 @@ class FinancialCard extends StatelessWidget {
     final gradient = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: card.gradientColors.map((colorValue) => Color(colorValue)).toList(),
+      colors:
+          card.gradientColors.map((colorValue) => Color(colorValue)).toList(),
     );
 
     return Stack(
@@ -94,9 +88,9 @@ class FinancialCard extends StatelessWidget {
                   _getCardTypeIcon(),
                 ],
               ),
-              
+
               const Spacer(),
-              
+
               // Center: Masked card number
               Text(
                 _getMaskedCardNumber(),
@@ -107,9 +101,9 @@ class FinancialCard extends StatelessWidget {
                   letterSpacing: 2,
                 ),
               ),
-              
+
               const Spacer(),
-              
+
               // Bottom row: Cardholder name (left) and Expiry date (right)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
