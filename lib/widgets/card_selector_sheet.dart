@@ -36,6 +36,8 @@ class CardSelectorSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('CardSelectorSheet: Displaying ${cards.length} cards');
+    
     return Container(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.7,

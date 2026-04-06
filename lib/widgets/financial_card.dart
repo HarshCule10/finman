@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../data/models/card_model.dart';
+import '../providers/card_provider.dart';
 
 /// A premium financial card widget with layered gradients, glassmorphism
 /// elements, holographic chip, and subtle motion-ready layout.
-class FinancialCard extends StatelessWidget {
+class FinancialCard extends StatefulWidget {
   final CardModel card;
 
   const FinancialCard({super.key, required this.card});
 
-  String get _maskedNumber => card.maskedCardNumber;
+  @override
+  State<FinancialCard> createState() => _FinancialCardState();
+}
+
+class _FinancialCardState extends State<FinancialCard> {
+  bool _isLongPressing = false;
+
+  String get _maskedNumber => widget.card.maskedCardNumber;
 
   /// Returns styled card-network label instead of a generic icon.
   Widget _buildNetworkBadge() {
-    final label = switch (card.cardType) {
+    final label = switch (widget.card.cardType) {
       CardType.visa => _VisaBadge(),
       CardType.mastercard => _MastercardBadge(),
       CardType.amex => _TextBadge(text: 'AMEX'),
@@ -29,6 +38,52 @@ class FinancialCard extends StatelessWidget {
   /// Splits the masked number into 4 groups for spaced rendering.
   List<String> get _numberGroups => _maskedNumber.split(' ');
 
+  /// Shows confirmation dialog before deleting the card
+  Future<void> _showDeleteConfirmation(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Card'),
+        content: Text(
+          'Are you sure you want to delete ${widget.card.nickname ?? widget.card.bankName}?\n\nThis action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      final cardProvider = Provider.of<CardProvider>(context, listen: false);
+      final success = await cardProvider.deleteCard(widget.card.id);
+      
+      if (context.mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Card deleted successfully')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(cardProvider.errorMessage ?? 'Failed to delete card'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final gradient = LinearGradient(
@@ -36,13 +91,13 @@ class FinancialCard extends StatelessWidget {
       end: Alignment.bottomRight,
       stops: const [0.0, 0.45, 1.0],
       colors:
-          card.gradientColors.length >= 2
+          widget.card.gradientColors.length >= 2
               ? [
-                Color(card.gradientColors[0]),
+                Color(widget.card.gradientColors[0]),
                 Color(
-                  card.gradientColors[0],
-                ).lerp(Color(card.gradientColors[1]), 0.5),
-                Color(card.gradientColors[1]),
+                  widget.card.gradientColors[0],
+                ).lerp(Color(widget.card.gradientColors[1]), 0.5),
+                Color(widget.card.gradientColors[1]),
               ]
               : [
                 const Color(0xFF1A1A2E),
@@ -51,33 +106,47 @@ class FinancialCard extends StatelessWidget {
               ],
     );
 
-    return SizedBox(
-      height: 210,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // ── Base card container ──────────────────────────────────────
-          Container(
-            decoration: BoxDecoration(
-              gradient: gradient,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(
-                    card.gradientColors.first,
-                  ).withValues(alpha: 0.45),
-                  blurRadius: 28,
-                  spreadRadius: -4,
-                  offset: const Offset(0, 14),
+    return GestureDetector(
+      onLongPressStart: (_) {
+        setState(() => _isLongPressing = true);
+      },
+      onLongPressEnd: (_) {
+        setState(() => _isLongPressing = false);
+      },
+      onLongPress: () {
+        // Trigger after 5 seconds (handled by Flutter's default long press duration)
+        _showDeleteConfirmation(context);
+      },
+      child: AnimatedScale(
+        scale: _isLongPressing ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        child: SizedBox(
+          height: 210,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // ── Base card container ──────────────────────────────────────
+              Container(
+                decoration: BoxDecoration(
+                  gradient: gradient,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(
+                        widget.card.gradientColors.first,
+                      ).withValues(alpha: 0.45),
+                      blurRadius: 28,
+                      spreadRadius: -4,
+                      offset: const Offset(0, 14),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-          ),
+              ),
 
           // ── Large blurred arc — top-right atmosphere ─────────────────
           Positioned(
@@ -144,7 +213,7 @@ class FinancialCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      card.bankName.toUpperCase(),
+                      widget.card.bankName.toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,
@@ -207,7 +276,7 @@ class FinancialCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          card.cardholderName.toUpperCase(),
+                          widget.card.cardholderName.toUpperCase(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 13,
@@ -231,7 +300,7 @@ class FinancialCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          card.expiryDate,
+                          widget.card.expiryDate,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 13,
@@ -260,6 +329,8 @@ class FinancialCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    ),
       ),
     );
   }

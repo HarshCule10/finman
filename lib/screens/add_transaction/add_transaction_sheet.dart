@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/transaction_provider.dart';
+import '../../../providers/card_provider.dart';
 import '../../../widgets/app_text_field.dart';
 import '../../../widgets/app_button.dart';
 import '../../../widgets/card_selector_sheet.dart';
 
 import '../../../data/models/transaction.dart';
 import '../../../data/models/card_model.dart';
-import '../../../data/services/storage_service.dart';
 
 class AddTransactionSheet extends StatefulWidget {
   final Transaction? transaction;
@@ -68,7 +68,6 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   @override
   void initState() {
     super.initState();
-    _loadCards();
     if (widget.transaction != null) {
       _amountController.text = (widget.transaction!.amount == widget.transaction!.amount.toInt())
           ? widget.transaction!.amount.toInt().toString()
@@ -81,18 +80,30 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     }
   }
 
-  Future<void> _loadCards() async {
-    final storageService = StorageService();
-    await storageService.init();
-    final cards = await storageService.getAllCards();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadCards();
+  }
+
+  void _loadCards() {
+    final cardProvider = Provider.of<CardProvider>(context, listen: false);
+    final cards = cardProvider.cards;
+    debugPrint('Loaded ${cards.length} cards from CardProvider');
+    
     setState(() {
       _availableCards = cards;
       // Initialize selected card from cardId when editing
-      if (_selectedCardId != null) {
-        _selectedCard = cards.firstWhere(
-          (card) => card.id == _selectedCardId,
-          orElse: () => cards.first,
-        );
+      if (_selectedCardId != null && cards.isNotEmpty) {
+        try {
+          _selectedCard = cards.firstWhere(
+            (card) => card.id == _selectedCardId,
+          );
+        } catch (e) {
+          debugPrint('Card with id $_selectedCardId not found');
+          _selectedCard = null;
+          _selectedCardId = null;
+        }
       }
     });
   }
