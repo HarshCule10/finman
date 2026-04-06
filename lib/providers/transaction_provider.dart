@@ -167,6 +167,7 @@ class TransactionProvider extends ChangeNotifier {
     required DateTime date,
     required bool isIncome,
     String note = '',
+    String? cardId,
   }) async {
     try {
       final transaction = Transaction(
@@ -176,6 +177,7 @@ class TransactionProvider extends ChangeNotifier {
         date: date,
         note: note,
         isIncome: isIncome,
+        cardId: cardId,
       );
       await _storage.addTransaction(transaction);
       _transactions = _storage.getAllTransactions();
@@ -216,6 +218,7 @@ class TransactionProvider extends ChangeNotifier {
     required DateTime date,
     required bool isIncome,
     String note = '',
+    String? cardId,
   }) async {
     try {
       final transaction = Transaction(
@@ -225,6 +228,7 @@ class TransactionProvider extends ChangeNotifier {
         date: date,
         note: note,
         isIncome: isIncome,
+        cardId: cardId,
       );
       await _storage.updateTransaction(transaction);
       _transactions = _storage.getAllTransactions();

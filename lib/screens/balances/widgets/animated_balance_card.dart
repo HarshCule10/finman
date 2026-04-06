@@ -191,9 +191,10 @@ class _AnimatedBalanceCardState extends State<AnimatedBalanceCard>
                 const SizedBox(height: 12),
                 // Animated balance number
                 TweenAnimationBuilder<double>(
+                  key: ValueKey(widget.totalBalance),
                   tween: Tween(begin: 0, end: widget.totalBalance),
-                  duration: const Duration(milliseconds: 1200),
-                  curve: Curves.easeOut,
+                  duration: const Duration(milliseconds: 1500),
+                  curve: Curves.easeOutQuart,
                   builder: (context, value, _) {
                     final sign = value < 0 ? '-' : '';
                     return Text(

@@ -3,8 +3,11 @@ import 'package:provider/provider.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../../widgets/app_text_field.dart';
 import '../../../widgets/app_button.dart';
+import '../../../widgets/card_selector_sheet.dart';
 
 import '../../../data/models/transaction.dart';
+import '../../../data/models/card_model.dart';
+import '../../../data/services/storage_service.dart';
 
 class AddTransactionSheet extends StatefulWidget {
   final Transaction? transaction;
@@ -34,6 +37,11 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   bool _isLoading = false;
   String? _selectedCategory;
   
+  // Card selection state
+  String? _selectedCardId;
+  CardModel? _selectedCard;
+  List<CardModel> _availableCards = [];
+  
   // Standard expense categories
   static const List<String> _expenseCategories = [
     'Food & Dining',
@@ -60,6 +68,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   @override
   void initState() {
     super.initState();
+    _loadCards();
     if (widget.transaction != null) {
       _amountController.text = (widget.transaction!.amount == widget.transaction!.amount.toInt())
           ? widget.transaction!.amount.toInt().toString()
@@ -68,7 +77,24 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       _isIncome = widget.transaction!.isIncome;
       _selectedDate = widget.transaction!.date;
       _selectedCategory = widget.transaction!.category;
+      _selectedCardId = widget.transaction!.cardId;
     }
+  }
+
+  Future<void> _loadCards() async {
+    final storageService = StorageService();
+    await storageService.init();
+    final cards = await storageService.getAllCards();
+    setState(() {
+      _availableCards = cards;
+      // Initialize selected card from cardId when editing
+      if (_selectedCardId != null) {
+        _selectedCard = cards.firstWhere(
+          (card) => card.id == _selectedCardId,
+          orElse: () => cards.first,
+        );
+      }
+    });
   }
 
   @override
@@ -114,6 +140,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         date: _selectedDate,
         isIncome: _isIncome,
         note: _descriptionController.text.trim(),
+        cardId: _selectedCardId,
       );
     } else {
       success = await provider.add(
@@ -122,6 +149,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         date: _selectedDate,
         isIncome: _isIncome,
         note: _descriptionController.text.trim(),
+        cardId: _selectedCardId,
       );
     }
 
@@ -270,6 +298,57 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     validator: (val) => val == null ? 'Please select a category' : null,
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              // Card selection field
+              GestureDetector(
+                onTap: () async {
+                  final selected = await CardSelectorSheet.show(
+                    context,
+                    cards: _availableCards,
+                    selectedCardId: _selectedCardId,
+                  );
+                  // Handle both explicit selection and "No Card" option
+                  setState(() {
+                    _selectedCard = selected;
+                    _selectedCardId = selected?.id;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Theme.of(context).colorScheme.outline),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Card (Optional)',
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _selectedCard != null
+                                  ? _selectedCard!.nickname ?? _selectedCard!.bankName
+                                  : 'No card selected',
+                              style: TextStyle(
+                                color: _selectedCard != null
+                                    ? Theme.of(context).textTheme.bodyLarge?.color
+                                    : Theme.of(context).textTheme.bodySmall?.color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios, size: 16),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               GestureDetector(

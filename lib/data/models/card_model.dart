@@ -31,6 +31,7 @@ class CardModel {
   final CardType cardType;
   final List<int> gradientColors; // Two color values for gradient
   final DateTime createdAt;
+  final String? nickname; // Optional user-defined nickname for card identification
 
   CardModel({
     required this.id,
@@ -41,6 +42,7 @@ class CardModel {
     required this.cardType,
     required this.gradientColors,
     DateTime? createdAt,
+    this.nickname,
   }) : createdAt = createdAt ?? DateTime.now();
 
   /// Returns the masked card number with only last 4 digits visible
@@ -66,6 +68,7 @@ class CardModel {
     String? expiryDate,
     CardType? cardType,
     List<int>? gradientColors,
+    String? nickname,
   }) {
     return CardModel(
       id: id ?? this.id,
@@ -76,6 +79,7 @@ class CardModel {
       cardType: cardType ?? this.cardType,
       gradientColors: gradientColors ?? this.gradientColors,
       createdAt: createdAt,
+      nickname: nickname ?? this.nickname,
     );
   }
 
@@ -90,6 +94,7 @@ class CardModel {
       'cardType': cardType.toJson(),
       'gradientColors': gradientColors,
       'createdAt': createdAt.toIso8601String(),
+      'nickname': nickname,
     };
   }
 
@@ -106,6 +111,7 @@ class CardModel {
           .map((e) => e as int)
           .toList(),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      nickname: json['nickname'] as String?,
     );
   }
 }

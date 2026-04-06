@@ -29,6 +29,7 @@ class _AddCardSheetState extends State<AddCardSheet> {
   final _cardNumberController = TextEditingController();
   final _cardholderNameController = TextEditingController();
   final _expiryDateController = TextEditingController();
+  final _nicknameController = TextEditingController();
   
   CardType _selectedType = CardType.visa;
   bool _isLoading = false;
@@ -39,6 +40,7 @@ class _AddCardSheetState extends State<AddCardSheet> {
     _cardNumberController.dispose();
     _cardholderNameController.dispose();
     _expiryDateController.dispose();
+    _nicknameController.dispose();
     super.dispose();
   }
 
@@ -64,6 +66,9 @@ class _AddCardSheetState extends State<AddCardSheet> {
       expiryDate: _expiryDateController.text.trim(),
       cardType: _selectedType,
       gradientColors: gradientColors,
+      nickname: _nicknameController.text.trim().isEmpty 
+          ? null 
+          : _nicknameController.text.trim(),
     );
 
     final success = await provider.addCard(newCard);
@@ -182,6 +187,15 @@ class _AddCardSheetState extends State<AddCardSheet> {
                 hint: 'Name on card',
                 controller: _cardholderNameController,
                 validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                label: 'Card Nickname (Optional)',
+                hint: 'e.g., Work Card, Travel Card',
+                controller: _nicknameController,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(50),
+                ],
               ),
               const SizedBox(height: 32),
               AppButton(
