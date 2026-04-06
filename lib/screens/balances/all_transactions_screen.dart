@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../providers/transaction_provider.dart';
-
-/// Full-screen transaction list with Weekly / Monthly tab switcher.
+import '../home/widgets/transaction_tile.dart';
 class AllTransactionsScreen extends StatefulWidget {
   const AllTransactionsScreen({super.key});
 
@@ -60,67 +58,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen>
       itemCount: transactions.length,
       itemBuilder: (context, index) {
         final t = transactions[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: t.isIncome
-                  ? [
-                      Theme.of(context).colorScheme.surface,
-                      Colors.green.withValues(alpha: 0.1),
-                    ]
-                  : [
-                      Theme.of(context).colorScheme.surface,
-                      Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
-                    ],
-            ),
-            border: Border.all(
-              color: (t.isIncome ? Colors.green : Theme.of(context).colorScheme.error)
-                  .withValues(alpha: 0.2),
-            ),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: (t.isIncome
-                        ? Colors.green
-                        : Theme.of(context).colorScheme.error)
-                    .withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                t.isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                color: t.isIncome ? Colors.green : Theme.of(context).colorScheme.error,
-                size: 18,
-              ),
-            ),
-            title: Text(t.category,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-            subtitle: Text(
-              t.note.isNotEmpty ? t.note : '${t.date.day}/${t.date.month}/${t.date.year}',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                fontSize: 12,
-              ),
-            ),
-            trailing: Text(
-              Formatters.formatCurrency('₹', t.amount),
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 17,
-                color: t.isIncome
-                    ? Colors.green
-                    : Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-          ),
-        )
+        return TransactionTile(transaction: t)
             .animate(delay: (index * 40).ms)
             .slideX(begin: 0.15, end: 0, duration: 350.ms, curve: Curves.easeOut)
             .fadeIn(duration: 300.ms);

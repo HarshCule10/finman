@@ -72,7 +72,7 @@ class IncomeExpenseChart extends StatelessWidget {
                     return Text(
                       '₹${(value / 1000).toStringAsFixed(0)}k',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                         fontSize: 10,
                       ),
                     );
@@ -92,7 +92,7 @@ class IncomeExpenseChart extends StatelessWidget {
                       child: Text(
                         labels[idx],
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                           fontSize: 10,
                         ),
                       ),
@@ -105,7 +105,7 @@ class IncomeExpenseChart extends StatelessWidget {
               show: true,
               drawVerticalLine: false,
               getDrawingHorizontalLine: (_) => FlLine(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
                 strokeWidth: 1,
               ),
             ),

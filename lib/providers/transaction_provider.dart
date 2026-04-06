@@ -209,6 +209,38 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> update({
+    required String id,
+    required double amount,
+    required String category,
+    required DateTime date,
+    required bool isIncome,
+    String note = '',
+  }) async {
+    try {
+      final transaction = Transaction(
+        id: id,
+        amount: amount,
+        category: category,
+        date: date,
+        note: note,
+        isIncome: isIncome,
+      );
+      await _storage.updateTransaction(transaction);
+      _transactions = _storage.getAllTransactions();
+      _invalidateCache();
+      _errorMessage = null;
+      debugPrint('Successfully updated transaction: $id');
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('Error updating transaction: $e');
+      _errorMessage = 'Failed to update transaction. Please try again.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   // ── Chart data ──────────────────────────────────────────────────────────────
 
   /// Returns daily income/expense totals for a given week (Mon–Sun).

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/transaction_provider.dart';
-import '../../../core/utils/formatters.dart';
+import 'transaction_tile.dart';
 
 class DailyTransactions extends StatefulWidget {
   const DailyTransactions({super.key});
@@ -143,66 +143,7 @@ class _DailyTransactionsState extends State<DailyTransactions> {
               itemCount: dailyTransactions.length,
               itemBuilder: (context, index) {
                 final transaction = dailyTransactions[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: transaction.isIncome
-                          ? [
-                              Theme.of(context).colorScheme.surface,
-                              Colors.green.withValues(alpha: 0.1),
-                            ]
-                          : [
-                              Theme.of(context).colorScheme.surface,
-                              Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
-                            ],
-                    ),
-                    border: Border.all(
-                      color: (transaction.isIncome ? Colors.green : Theme.of(context).colorScheme.error)
-                          .withValues(alpha: 0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: (transaction.isIncome ? Colors.green : Theme.of(context).colorScheme.error)
-                            .withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        transaction.isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                        color: transaction.isIncome ? Colors.green : Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                    title: Text(
-                      transaction.category,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    subtitle: transaction.note.isNotEmpty 
-                        ? Text(
-                            transaction.note,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                            ),
-                          ) 
-                        : null,
-                    trailing: Text(
-                      Formatters.formatCurrency('₹', transaction.amount),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: transaction.isIncome ? Colors.green : Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                );
+                return TransactionTile(transaction: transaction);
               },
             );
           },

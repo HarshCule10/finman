@@ -4,15 +4,19 @@ import '../../../providers/transaction_provider.dart';
 import '../../../widgets/app_text_field.dart';
 import '../../../widgets/app_button.dart';
 
-class AddTransactionSheet extends StatefulWidget {
-  const AddTransactionSheet({super.key});
+import '../../../data/models/transaction.dart';
 
-  static Future<void> show(BuildContext context) {
+class AddTransactionSheet extends StatefulWidget {
+  final Transaction? transaction;
+
+  const AddTransactionSheet({super.key, this.transaction});
+
+  static Future<void> show(BuildContext context, {Transaction? transaction}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const AddTransactionSheet(),
+      builder: (_) => AddTransactionSheet(transaction: transaction),
     );
   }
 
@@ -54,6 +58,20 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.transaction != null) {
+      _amountController.text = (widget.transaction!.amount == widget.transaction!.amount.toInt())
+          ? widget.transaction!.amount.toInt().toString()
+          : widget.transaction!.amount.toString();
+      _descriptionController.text = widget.transaction!.note;
+      _isIncome = widget.transaction!.isIncome;
+      _selectedDate = widget.transaction!.date;
+      _selectedCategory = widget.transaction!.category;
+    }
+  }
+
+  @override
   void dispose() {
     _amountController.dispose();
     _descriptionController.dispose();
@@ -87,13 +105,25 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     final provider = Provider.of<TransactionProvider>(context, listen: false);
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     
-    final success = await provider.add(
-      amount: amount,
-      category: _selectedCategory!,
-      date: _selectedDate,
-      isIncome: _isIncome,
-      note: _descriptionController.text.trim(),
-    );
+    bool success;
+    if (widget.transaction != null) {
+      success = await provider.update(
+        id: widget.transaction!.id,
+        amount: amount,
+        category: _selectedCategory!,
+        date: _selectedDate,
+        isIncome: _isIncome,
+        note: _descriptionController.text.trim(),
+      );
+    } else {
+      success = await provider.add(
+        amount: amount,
+        category: _selectedCategory!,
+        date: _selectedDate,
+        isIncome: _isIncome,
+        note: _descriptionController.text.trim(),
+      );
+    }
 
     if (mounted) {
       setState(() => _isLoading = false);
@@ -129,7 +159,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Add Transaction',
+                    widget.transaction != null ? 'Edit Transaction' : 'Add Transaction',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -226,8 +256,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     ),
-                    items: (_isIncome ? _incomeCategories : _expenseCategories)
-                        .map((category) => DropdownMenuItem(
+                    items: {
+                      ...(_isIncome ? _incomeCategories : _expenseCategories),
+                      if (_selectedCategory != null) _selectedCategory!,
+                    }.map((category) => DropdownMenuItem(
                               value: category,
                               child: Text(category),
                             ))
@@ -267,7 +299,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               ),
               const SizedBox(height: 32),
               AppButton(
-                label: 'Save Transaction',
+                label: widget.transaction != null ? 'Update Transaction' : 'Save Transaction',
                 isLoading: _isLoading,
                 onPressed: _submit,
               ),
