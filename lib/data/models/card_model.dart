@@ -48,6 +48,12 @@ class CardModel {
   String get maskedCardNumber {
     if (cardNumber.length < 4) return cardNumber;
     final last4 = cardNumber.substring(cardNumber.length - 4);
+    
+    if (cardNumber.length == 16) {
+      return "**** **** **** $last4";
+    } else if (cardNumber.length == 12) {
+      return "**** **** $last4";
+    }
     return '**** **** **** $last4';
   }
 

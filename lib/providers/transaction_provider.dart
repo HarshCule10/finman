@@ -208,4 +208,84 @@ class TransactionProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  // ── Chart data ──────────────────────────────────────────────────────────────
+
+  /// Returns daily income/expense totals for a given week (Mon–Sun).
+  /// Result list has 7 entries index 0=Mon … 6=Sun.
+  List<Map<String, double>> getWeeklyChartData(DateTime weekStart) {
+    final data = List.generate(
+      7,
+      (_) => {'income': 0.0, 'expense': 0.0},
+    );
+    for (final t in _storage.getAllTransactions()) {
+      final dayOffset = t.date
+          .difference(
+              DateTime(weekStart.year, weekStart.month, weekStart.day))
+          .inDays;
+      if (dayOffset >= 0 && dayOffset < 7) {
+        if (t.isIncome) {
+          data[dayOffset]['income'] = data[dayOffset]['income']! + t.amount;
+        } else {
+          data[dayOffset]['expense'] = data[dayOffset]['expense']! + t.amount;
+        }
+      }
+    }
+    return data;
+  }
+
+  /// Returns weekly income/expense totals for the given month.
+  /// Splits the month into ISO weeks (up to 5 groups).
+  List<Map<String, double>> getMonthlyChartData(DateTime month) {
+    // Find first and last day of month
+    final firstDay = DateTime(month.year, month.month, 1);
+    final lastDay = DateTime(month.year, month.month + 1, 0);
+    final weeks = <Map<String, double>>[];
+
+    DateTime weekStart = firstDay;
+    while (weekStart.isBefore(lastDay) ||
+        weekStart.isAtSameMomentAs(lastDay)) {
+      final weekEnd = weekStart.add(const Duration(days: 6));
+      final clampedEnd = weekEnd.isAfter(lastDay) ? lastDay : weekEnd;
+      weeks.add({'income': 0.0, 'expense': 0.0});
+
+      for (final t in _storage.getAllTransactions()) {
+        final d = DateTime(t.date.year, t.date.month, t.date.day);
+        if (!d.isBefore(weekStart) && !d.isAfter(clampedEnd)) {
+          if (t.isIncome) {
+            weeks.last['income'] = weeks.last['income']! + t.amount;
+          } else {
+            weeks.last['expense'] = weeks.last['expense']! + t.amount;
+          }
+        }
+      }
+      weekStart = weekStart.add(const Duration(days: 7));
+    }
+    return weeks;
+  }
+
+  // ── Weekly helpers ───────────────────────────────────────────────────────────
+
+  DateTime get _currentWeekStart {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
+  }
+
+  List<Transaction> get weekTransactions {
+    final start = _currentWeekStart;
+    final end = start.add(const Duration(days: 7));
+    return allTransactions
+        .where((t) =>
+            !t.date.isBefore(start) && t.date.isBefore(end))
+        .toList();
+  }
+
+  double get weekIncome =>
+      weekTransactions.where((t) => t.isIncome).fold(0.0, (s, t) => s + t.amount);
+
+  double get weekExpenses =>
+      weekTransactions.where((t) => !t.isIncome).fold(0.0, (s, t) => s + t.amount);
+
+  double get weekBalance => weekIncome - weekExpenses;
 }

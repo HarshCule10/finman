@@ -4,6 +4,7 @@ import '../../../data/models/card_model.dart';
 import '../../../providers/card_provider.dart';
 import '../../../widgets/app_text_field.dart';
 import '../../../widgets/app_button.dart';
+import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 class AddCardSheet extends StatefulWidget {
@@ -58,7 +59,7 @@ class _AddCardSheetState extends State<AddCardSheet> {
     final newCard = CardModel(
       id: const Uuid().v4(),
       bankName: _bankNameController.text.trim(),
-      cardNumber: _cardNumberController.text.trim(),
+      cardNumber: _cardNumberController.text.replaceAll(' ', ''),
       cardholderName: _cardholderNameController.text.trim(),
       expiryDate: _expiryDateController.text.trim(),
       cardType: _selectedType,
@@ -122,10 +123,19 @@ class _AddCardSheetState extends State<AddCardSheet> {
               const SizedBox(height: 16),
               AppTextField(
                 label: 'Card Number',
-                hint: '16 digit number',
+                hint: '1234 5678 1234 5678',
                 keyboardType: TextInputType.number,
                 controller: _cardNumberController,
-                validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(16),
+                  CardNumberFormatter(),
+                ],
+                validator: (val) {
+                  if (val == null || val.isEmpty) return 'Required';
+                  if (val.replaceAll(' ', '').length < 16) return 'Must be 16 digits';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               Row(
@@ -183,6 +193,32 @@ class _AddCardSheetState extends State<AddCardSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class CardNumberFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    var text = newValue.text;
+    if (newValue.selection.baseOffset == 0) return newValue;
+
+    var buffer = StringBuffer();
+    for (int i = 0; i < text.length; i++) {
+      buffer.write(text[i]);
+      var nonSpaceIndex = i + 1;
+      if (nonSpaceIndex % 4 == 0 && nonSpaceIndex != text.length) {
+        buffer.write(' ');
+      }
+    }
+
+    var string = buffer.toString();
+    return newValue.copyWith(
+      text: string,
+      selection: TextSelection.collapsed(offset: string.length),
     );
   }
 }
