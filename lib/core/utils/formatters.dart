@@ -30,4 +30,34 @@ class Formatters {
     if (diff < 7) return _dayName.format(date);
     return _dateShort.format(date);
   }
+
+  /// Formats a monetary amount with the specified currency symbol.
+  /// 
+  /// Features:
+  /// - Displays currency symbol as prefix
+  /// - Includes thousand separators (e.g., 1,234.56)
+  /// - Shows exactly two decimal places
+  /// - Handles negative amounts with minus sign before currency symbol
+  /// 
+  /// Example:
+  /// ```dart
+  /// formatCurrency('$', 1234.56)  // Returns: "$1,234.56"
+  /// formatCurrency('₹', -500.0)   // Returns: "-₹500.00"
+  /// formatCurrency('€', 0.0)      // Returns: "€0.00"
+  /// ```
+  static String formatCurrency(String currencySymbol, double amount) {
+    final isNegative = amount < 0;
+    final absoluteAmount = amount.abs();
+    
+    // Format with thousand separators and two decimal places
+    final formatter = NumberFormat('#,##0.00', 'en_US');
+    final formattedAmount = formatter.format(absoluteAmount);
+    
+    // Build the final string with proper sign placement
+    if (isNegative) {
+      return '-$currencySymbol$formattedAmount';
+    } else {
+      return '$currencySymbol$formattedAmount';
+    }
+  }
 }

@@ -8,10 +8,10 @@ class AppColors {
   static const accentDark = Color(0xFF00C48C);
   static const secondary = Color(0xFF7B61FF);
 
-  // Dark theme
-  static const darkBg = Color(0xFF0A0A0A);
-  static const darkSurface = Color(0xFF1A1A2E);
-  static const darkCard = Color(0xFF16213E);
+  // Dark theme - Updated to match spec requirements
+  static const darkBg = Color(0xFF171717);
+  static const darkSurface = Color(0xFF262626);
+  static const darkCard = Color(0xFF262626);
   static const darkBorder = Color(0xFF2A2A3E);
 
   // Light theme
@@ -20,9 +20,9 @@ class AppColors {
   static const lightCard = Color(0xFFFFFFFF);
   static const lightBorder = Color(0xFFE5E5EA);
 
-  // Text
-  static const textWhite = Color(0xFFFFFFFF);
-  static const textGrey = Color(0xFF8E8E93);
+  // Text - Updated to match spec requirements
+  static const textWhite = Color(0xFFFAFAFA);
+  static const textGrey = Color(0xFFA0A0A0);
   static const textDark = Color(0xFF1C1C1E);
 
   // Semantic
