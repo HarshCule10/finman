@@ -23,18 +23,40 @@ class AddTransactionSheet extends StatefulWidget {
 class _AddTransactionSheetState extends State<AddTransactionSheet> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
-  final _categoryController = TextEditingController();
-  final _noteController = TextEditingController();
+  final _descriptionController = TextEditingController();
   
   bool _isIncome = false;
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
+  String? _selectedCategory;
+  
+  // Standard expense categories
+  static const List<String> _expenseCategories = [
+    'Food & Dining',
+    'Transportation',
+    'Shopping',
+    'Entertainment',
+    'Bills & Utilities',
+    'Healthcare',
+    'Education',
+    'Other',
+  ];
+  
+  // Standard income categories
+  static const List<String> _incomeCategories = [
+    'Salary',
+    'Freelance',
+    'Business',
+    'Investment',
+    'Gift',
+    'Refund',
+    'Other',
+  ];
 
   @override
   void dispose() {
     _amountController.dispose();
-    _categoryController.dispose();
-    _noteController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -52,6 +74,13 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category')),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -60,10 +89,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     
     final success = await provider.add(
       amount: amount,
-      category: _categoryController.text.trim(),
+      category: _selectedCategory!,
       date: _selectedDate,
       isIncome: _isIncome,
-      note: _noteController.text.trim(),
+      note: _descriptionController.text.trim(),
     );
 
     if (mounted) {
@@ -117,7 +146,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 children: [
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() => _isIncome = false),
+                      onTap: () => setState(() {
+                        _isIncome = false;
+                        _selectedCategory = null; // Reset category when switching type
+                      }),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
@@ -141,7 +173,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() => _isIncome = true),
+                      onTap: () => setState(() {
+                        _isIncome = true;
+                        _selectedCategory = null; // Reset category when switching type
+                      }),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
@@ -173,11 +208,36 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 validator: (val) => val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-              AppTextField(
-                label: 'Category',
-                hint: 'e.g. Food, Transport',
-                controller: _categoryController,
-                validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+              // Category Dropdown
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Category',
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    decoration: InputDecoration(
+                      hintText: _isIncome ? 'Select income category' : 'Select expense category',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    ),
+                    items: (_isIncome ? _incomeCategories : _expenseCategories)
+                        .map((category) => DropdownMenuItem(
+                              value: category,
+                              child: Text(category),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() => _selectedCategory = value);
+                    },
+                    validator: (val) => val == null ? 'Please select a category' : null,
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               GestureDetector(
@@ -201,9 +261,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'Note (Optional)',
+                label: 'Description',
                 hint: 'Add a description',
-                controller: _noteController,
+                controller: _descriptionController,
               ),
               const SizedBox(height: 32),
               AppButton(

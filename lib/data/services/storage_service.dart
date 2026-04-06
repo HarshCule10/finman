@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/transaction.dart';
 import '../models/card_model.dart';
 import '../models/category_model.dart';
@@ -62,6 +65,79 @@ class StorageService {
   // Settings — Onboarding
   bool get isOnboarded => _settings.get('isOnboarded', defaultValue: false);
   Future<void> setOnboarded(bool value) => _settings.put('isOnboarded', value);
+
+  // Settings — Profile photo path
+  String? get profilePhotoPath => _settings.get('profilePhotoPath');
+  Future<void> setProfilePhotoPath(String? path) =>
+      _settings.put('profilePhotoPath', path);
+
+  /// Saves a profile photo file to app documents directory
+  /// Accepts a File parameter for the image
+  /// Generates unique filename with timestamp
+  /// Copies image file to documents directory
+  /// Deletes old photo if exists
+  /// Saves new path to Hive storage
+  /// Returns the saved file path
+  Future<String> saveProfilePhoto(File imageFile) async {
+    // Get app documents directory
+    final directory = await getApplicationDocumentsDirectory();
+    
+    // Generate unique filename with timestamp
+    final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    
+    // Copy image file to documents directory
+    final savedImage = await imageFile.copy('${directory.path}/$fileName');
+    
+    // Delete old photo if exists
+    final oldPath = profilePhotoPath;
+    if (oldPath != null) {
+      try {
+        final oldFile = File(oldPath);
+        if (await oldFile.exists()) {
+          await oldFile.delete();
+        }
+      } catch (e) {
+        debugPrint('Error deleting old photo: $e');
+      }
+    }
+    
+    // Save new path to Hive storage
+    await setProfilePhotoPath(savedImage.path);
+    
+    // Return saved file path
+    return savedImage.path;
+  }
+
+  /// Retrieves the profile photo File object
+  /// Returns File if photo exists at stored path, null otherwise
+  /// Handles missing or corrupted files gracefully
+  Future<File?> getProfilePhotoFile() async {
+    try {
+      // Retrieve profile photo path from Hive storage
+      final path = profilePhotoPath;
+      
+      // Return null if no path is stored
+      if (path == null) {
+        return null;
+      }
+      
+      // Create File object from path
+      final file = File(path);
+      
+      // Check if file exists at path
+      if (await file.exists()) {
+        return file;
+      } else {
+        // File doesn't exist, clear the stored path
+        await setProfilePhotoPath(null);
+        return null;
+      }
+    } catch (e) {
+      // Handle any errors gracefully (corrupted files, permission issues, etc.)
+      debugPrint('Error retrieving profile photo: $e');
+      return null;
+    }
+  }
 
   // Cards — Secure storage with JSON serialization
   
