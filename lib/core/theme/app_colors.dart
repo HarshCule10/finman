@@ -30,7 +30,6 @@ class AppColors {
   static const expense = Color(0xFFFF6B6B);
   static const warning = Color(0xFFFFD60A);
 
-  // Gradients
   static const cardGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
