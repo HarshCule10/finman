@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../data/models/transaction.dart';
 import '../data/services/storage_service.dart';
 import '../core/utils/date_range.dart';
+import '../core/constants/categories.dart';
 
 class TransactionProvider extends ChangeNotifier {
   final StorageService _storage;
@@ -243,6 +244,138 @@ class TransactionProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  /// Normalises a stored category value to a key.
+  /// Old data stored full labels (e.g. "Food & Dining"); new data stores keys (e.g. "food").
+  /// If [stored] already is a key, returns it unchanged.
+  String _normalizeCategory(String stored) {
+    // Already a key?
+    if (AppCategories.fromKey(stored) != null) return stored;
+    // Try matching by label (case-insensitive)
+    final match = AppCategories.all.where(
+      (c) => c.label.toLowerCase() == stored.toLowerCase(),
+    ).firstOrNull;
+    return match?.key ?? stored;
+  }
+
+  // ── Statistics helpers ────────────────────────────────────────────────────────
+
+  /// Category breakdown for a given month, sorted descending by amount.
+  /// Set [expensesOnly] to false to get income categories instead.
+  Map<String, double> getCategoryBreakdownForMonth(
+    DateTime month, {
+    bool expensesOnly = true,
+  }) {
+    final txs = allTransactions
+        .where((t) =>
+            t.date.year == month.year &&
+            t.date.month == month.month &&
+            t.isIncome != expensesOnly) // income when !expensesOnly
+        .toList();
+    final map = <String, double>{};
+    for (final t in txs) {
+      final key = _normalizeCategory(t.category);
+      map[key] = (map[key] ?? 0) + t.amount;
+    }
+    // Sort descending
+    final sorted = Map.fromEntries(
+      map.entries.toList()..sort((a, b) => b.value.compareTo(a.value)),
+    );
+    return sorted;
+  }
+
+  /// Daily spending totals for the past [days] days (expenses only).
+  /// Returns a list of maps with 'date' (DateTime) and 'amount' (double).
+  List<Map<String, dynamic>> getDailySpendingTrend({int days = 30}) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final result = <Map<String, dynamic>>[];
+
+    for (int i = days - 1; i >= 0; i--) {
+      final day = today.subtract(Duration(days: i));
+      final dayEnd = day.add(const Duration(days: 1));
+      final total = allTransactions
+          .where((t) =>
+              !t.isIncome &&
+              !t.date.isBefore(day) &&
+              t.date.isBefore(dayEnd))
+          .fold(0.0, (sum, t) => sum + t.amount);
+      result.add({'date': day, 'amount': total});
+    }
+    return result;
+  }
+
+  /// All transactions for a specific category key within a month.
+  /// Handles both key-stored and legacy label-stored transactions.
+  List<Transaction> getTransactionsByCategory(String categoryKey, DateTime month) {
+    final catLabel =
+        AppCategories.fromKey(categoryKey)?.label.toLowerCase();
+    return allTransactions.where((t) {
+      if (t.date.year != month.year || t.date.month != month.month) return false;
+      final stored = t.category;
+      if (stored == categoryKey) return true;
+      if (catLabel != null && stored.toLowerCase() == catLabel) return true;
+      return false;
+    }).toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+  }
+
+  // ── Search helpers ──────────────────────────────────────────────────────────
+
+  /// Full-text search across note and category with optional filters.
+  /// [isIncome] null = all, true = income only, false = expenses only.
+  List<Transaction> searchTransactions({
+    String? query,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? categoryKey,
+    bool? isIncome,
+  }) {
+    var results = allTransactions.toList();
+
+    // Text search (case-insensitive across note + category)
+    if (query != null && query.trim().isNotEmpty) {
+      final q = query.trim().toLowerCase();
+      results = results
+          .where((t) =>
+              t.note.toLowerCase().contains(q) ||
+              t.category.toLowerCase().contains(q))
+          .toList();
+    }
+
+    // Date range
+    if (startDate != null) {
+      final start = DateTime(startDate.year, startDate.month, startDate.day);
+      results = results.where((t) => !t.date.isBefore(start)).toList();
+    }
+    if (endDate != null) {
+      final end = DateTime(endDate.year, endDate.month, endDate.day)
+          .add(const Duration(days: 1));
+      results = results.where((t) => t.date.isBefore(end)).toList();
+    }
+
+    // Category — matches stored key OR legacy label strings (backward compat)
+    if (categoryKey != null && categoryKey.isNotEmpty) {
+      final catLabel =
+          AppCategories.fromKey(categoryKey)?.label.toLowerCase();
+      results = results.where((t) {
+        final stored = t.category;
+        // Key match (new data) OR label match (old data stored as label)
+        if (stored == categoryKey) return true;
+        if (catLabel != null && stored.toLowerCase() == catLabel) return true;
+        return false;
+      }).toList();
+    }
+
+    // Income / Expense
+    if (isIncome != null) {
+      results = results.where((t) => t.isIncome == isIncome).toList();
+    }
+
+    // Sort newest first
+    results.sort((a, b) => b.date.compareTo(a.date));
+    return results;
   }
 
   // ── Chart data ──────────────────────────────────────────────────────────────

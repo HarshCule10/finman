@@ -1,0 +1,44 @@
+﻿Analyzing finman...                                             
+
+   info - The imported package 'hive' isn't a dependency of the importing package - lib\data\models\transaction.dart:1:8 - depend_on_referenced_packages
+   info - 'swapAnimationDuration' is deprecated and shouldn't be used. Please use [duration] instead - lib\screens\balances\widgets\income_expense_chart.dart:146:11 - deprecated_member_use
+   info - 'swapAnimationCurve' is deprecated and shouldn't be used. Please use [curve] instead - lib\screens\balances\widgets\income_expense_chart.dart:147:11 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\home\widgets\expense_summary.dart:89:70 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\home\widgets\expense_summary.dart:119:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\home\widgets\expense_summary.dart:131:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\home\widgets\expense_summary.dart:150:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\home\widgets\expense_summary.dart:181:24 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\home\widgets\expense_summary.dart:205:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\home\widgets\expense_summary.dart:231:33 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\screens\profile\profile_screen.dart:61:51 - use_build_context_synchronously
+   info - Unnecessary braces in a string interpolation - test\unit\services\storage_service_cards_test.dart:242:35 - unnecessary_brace_in_string_interps
+   info - Don't invoke 'print' in production code - test_currency_manual.dart:5:3 - avoid_print
+   info - Don't invoke 'print' in production code - test_currency_manual.dart:6:3 - avoid_print
+   info - Don't invoke 'print' in production code - test_currency_manual.dart:7:3 - avoid_print
+   info - Don't invoke 'print' in production code - test_currency_manual.dart:8:3 - avoid_print
+   info - Don't invoke 'print' in production code - test_currency_manual.dart:10:3 - avoid_print
+   info - Don't invoke 'print' in production code - test_currency_manual.dart:11:3 - avoid_print
+   info - Don't invoke 'print' in production code - test_currency_manual.dart:12:3 - avoid_print
+   info - Don't invoke 'print' in production code - test_currency_manual.dart:14:3 - avoid_print
+   info - Don't invoke 'print' in production code - test_currency_manual.dart:15:3 - avoid_print
+   info - Don't invoke 'print' in production code - test_currency_manual.dart:16:3 - avoid_print
+   info - Don't invoke 'print' in production code - test_currency_manual.dart:17:3 - avoid_print
+
+flutter : 23 issues 
+found. (ran in 2.2s)
+At line:1 char:1
++ flutter analyze 
+--no-pub 2>&1 | Out-File 
+-FilePath 
+"analyze_output.tx ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo        
+      : NotSpecified: (2  
+  3 issues found. (ran    
+ in 2.2s):String) [],     
+RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 

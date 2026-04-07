@@ -106,56 +106,6 @@ class HomeScreen extends StatelessWidget {
     ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(begin: 0.2, end: 0);
   }
 
-  /// Builds the gradient button for Statistics/Total Expenses
-  Widget _buildStatisticsButton(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: InkWell(
-        onTap: () {
-          // Typically we would use a GoRouter or default Navigator 
-          // to switch to the Statistics tab/screen.
-          // Example: DefaultTabController.of(context)?.animateTo(1);
-          // Adjust based on your routing system.
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF11998e), Color(0xFF38ef7d)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF38ef7d).withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.bar_chart, color: Colors.white),
-              SizedBox(width: 12),
-              Text(
-                'View Total Expenses & Stats',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(begin: 0.2, end: 0);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -179,11 +129,6 @@ class HomeScreen extends StatelessWidget {
               _buildCardCarousel(context),
               
               const SizedBox(height: 24),
-              
-              // Statistics shortcut button
-              _buildStatisticsButton(context),
-              
-              const SizedBox(height: 32),
               
               // Daily Transactions List
               const DailyTransactions()

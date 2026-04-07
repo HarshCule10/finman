@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../home/home_screen.dart';
 import '../balances/balances_screen.dart';
+import '../statistics/statistics_screen.dart';
+import '../search/search_screen.dart';
 import '../profile/profile_screen.dart';
+
+/// Notifier to broadcast tab index changes down the widget tree
+class TabIndexNotifier extends ValueNotifier<int> {
+  TabIndexNotifier(super.value);
+}
 
 /// Root navigation container managing bottom navigation and screen switching.
 /// Uses IndexedStack to preserve state across tab switches.
@@ -16,10 +24,16 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
   int _currentIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
+  
+  TabIndexNotifier? _tabIndexNotifierInstance;
+  TabIndexNotifier get _tabIndexNotifier => 
+      _tabIndexNotifierInstance ??= TabIndexNotifier(_currentIndex);
 
   final List<Widget> _screens = const [
     HomeScreen(),
     BalancesScreen(),
+    StatisticsScreen(),
+    SearchScreen(),
     ProfileScreen(),
   ];
 
@@ -38,6 +52,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
   @override
   void dispose() {
     _animationController.dispose();
+    _tabIndexNotifierInstance?.dispose();
     super.dispose();
   }
 
@@ -52,6 +67,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     setState(() {
       _currentIndex = index;
     });
+    _tabIndexNotifier.value = index;
   }
 
   Widget _buildBody() {
@@ -81,8 +97,8 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
           elevation: 0,
           selectedItemColor: Theme.of(context).colorScheme.primary,
           unselectedItemColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-          selectedFontSize: 12,
-          unselectedFontSize: 12,
+          selectedFontSize: 11,
+          unselectedFontSize: 11,
           type: BottomNavigationBarType.fixed,
           items: [
             BottomNavigationBarItem(
@@ -96,8 +112,18 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
               label: 'Balances',
             ),
             BottomNavigationBarItem(
-              icon: _buildAnimatedIcon(Icons.person_outline, 2),
-              activeIcon: _buildAnimatedIcon(Icons.person, 2),
+              icon: _buildAnimatedIcon(Icons.pie_chart_outline_rounded, 2),
+              activeIcon: _buildAnimatedIcon(Icons.pie_chart_rounded, 2),
+              label: 'Stats',
+            ),
+            BottomNavigationBarItem(
+              icon: _buildAnimatedIcon(Icons.search_rounded, 3),
+              activeIcon: _buildAnimatedIcon(Icons.search_rounded, 3),
+              label: 'Search',
+            ),
+            BottomNavigationBarItem(
+              icon: _buildAnimatedIcon(Icons.person_outline, 4),
+              activeIcon: _buildAnimatedIcon(Icons.person, 4),
               label: 'Profile',
             ),
           ],
@@ -121,9 +147,12 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _buildBody(),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+    return ChangeNotifierProvider.value(
+      value: _tabIndexNotifier,
+      child: Scaffold(
+        body: _buildBody(),
+        bottomNavigationBar: _buildBottomNavigationBar(),
+      ),
     );
   }
 }

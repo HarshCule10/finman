@@ -5,6 +5,7 @@ import '../../../providers/card_provider.dart';
 import '../../../widgets/app_text_field.dart';
 import '../../../widgets/app_button.dart';
 import '../../../widgets/card_selector_sheet.dart';
+import '../../../core/constants/categories.dart';
 
 import '../../../data/models/transaction.dart';
 import '../../../data/models/card_model.dart';
@@ -42,28 +43,18 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   CardModel? _selectedCard;
   List<CardModel> _availableCards = [];
   
-  // Standard expense categories
-  static const List<String> _expenseCategories = [
-    'Food & Dining',
-    'Transportation',
-    'Shopping',
-    'Entertainment',
-    'Bills & Utilities',
-    'Healthcare',
-    'Education',
-    'Other',
+  // Category keys stored in Transaction.category; labels resolved via AppCategories
+  static const List<String> _expenseCategoryKeys = [
+    'food', 'transport', 'shopping', 'entertainment',
+    'bills', 'health', 'education', 'other',
   ];
-  
-  // Standard income categories
-  static const List<String> _incomeCategories = [
-    'Salary',
-    'Freelance',
-    'Business',
-    'Investment',
-    'Gift',
-    'Refund',
-    'Other',
+
+  static const List<String> _incomeCategoryKeys = [
+    'salary', 'freelance', 'investment', 'gift', 'other_income',
   ];
+
+  /// Display label for a stored category key (graceful fallback for old data).
+  String _labelFor(String key) => AppCategories.fromKey(key)?.label ?? key;
 
   @override
   void initState() {
@@ -296,11 +287,11 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     ),
                     items: {
-                      ...(_isIncome ? _incomeCategories : _expenseCategories),
+                      ...(_isIncome ? _incomeCategoryKeys : _expenseCategoryKeys),
                       if (_selectedCategory != null) _selectedCategory!,
-                    }.map((category) => DropdownMenuItem(
-                              value: category,
-                              child: Text(category),
+                    }.map((key) => DropdownMenuItem(
+                              value: key,
+                              child: Text(_labelFor(key)),
                             ))
                         .toList(),
                     onChanged: (value) {

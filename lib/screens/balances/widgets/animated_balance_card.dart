@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+import '../../shell/app_shell.dart';
 
 /// A hero card showing total balance, income, and expenses with
 /// animated number counting from 0 to the actual value.
@@ -23,6 +25,9 @@ class _AnimatedBalanceCardState extends State<AnimatedBalanceCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _glowController;
   late Animation<double> _glowAnimation;
+
+  int _animationKeyCounter = 0;
+  int? _prevTab;
 
   @override
   void initState() {
@@ -53,11 +58,13 @@ class _AnimatedBalanceCardState extends State<AnimatedBalanceCard>
     required double value,
     required Color color,
     required Duration delay,
+    required String keySuffix,
   }) {
     return Expanded(
       child: TweenAnimationBuilder<double>(
+        key: ValueKey('${value}_$keySuffix'),
         tween: Tween(begin: 0, end: value),
-        duration: const Duration(milliseconds: 1400),
+        duration: const Duration(milliseconds: 800),
         curve: Curves.easeOut,
         builder: (context, animValue, _) {
           return Container(
@@ -115,6 +122,14 @@ class _AnimatedBalanceCardState extends State<AnimatedBalanceCard>
 
   @override
   Widget build(BuildContext context) {
+    try {
+      final currentTab = context.watch<TabIndexNotifier>().value;
+      if (currentTab == 1 && _prevTab != 1) {
+        _animationKeyCounter++;
+      }
+      _prevTab = currentTab;
+    } catch (_) {}
+
     return AnimatedBuilder(
       animation: _glowAnimation,
       builder: (context, child) {
@@ -191,9 +206,9 @@ class _AnimatedBalanceCardState extends State<AnimatedBalanceCard>
                 const SizedBox(height: 12),
                 // Animated balance number
                 TweenAnimationBuilder<double>(
-                  key: ValueKey(widget.totalBalance),
+                  key: ValueKey('${widget.totalBalance}_$_animationKeyCounter'),
                   tween: Tween(begin: 0, end: widget.totalBalance),
-                  duration: const Duration(milliseconds: 1500),
+                  duration: const Duration(milliseconds: 1000),
                   curve: Curves.easeOutQuart,
                   builder: (context, value, _) {
                     final sign = value < 0 ? '-' : '';
@@ -218,6 +233,7 @@ class _AnimatedBalanceCardState extends State<AnimatedBalanceCard>
                       value: widget.income,
                       color: const Color(0xFF38ef7d),
                       delay: 300.ms,
+                      keySuffix: '$_animationKeyCounter',
                     ),
                     const SizedBox(width: 12),
                     _buildStatChip(
@@ -226,6 +242,7 @@ class _AnimatedBalanceCardState extends State<AnimatedBalanceCard>
                       value: widget.expenses,
                       color: const Color(0xFFFF6B6B),
                       delay: 450.ms,
+                      keySuffix: '$_animationKeyCounter',
                     ),
                   ],
                 ),
