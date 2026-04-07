@@ -3,11 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 
-/// Curved line chart showing daily spending trend over a period.
+/// Curved line chart showing daily spending/income trend over a period.
 class SpendingTrendChart extends StatefulWidget {
   final List<Map<String, dynamic>> data; // [{date, amount}, ...]
+  final bool showExpenses; // true = spending (red), false = income (green)
 
-  const SpendingTrendChart({super.key, required this.data});
+  const SpendingTrendChart({
+    super.key,
+    required this.data,
+    this.showExpenses = true,
+  });
 
   @override
   State<SpendingTrendChart> createState() => _SpendingTrendChartState();
@@ -38,7 +43,7 @@ class _SpendingTrendChartState extends State<SpendingTrendChart> {
         height: 200,
         child: Center(
           child: Text(
-            'No spending data yet',
+            widget.showExpenses ? 'No spending data yet' : 'No income data yet',
             style: TextStyle(color: labelColor, fontSize: 14),
           ),
         ),
@@ -169,7 +174,9 @@ class _SpendingTrendChartState extends State<SpendingTrendChart> {
               ),
               isCurved: true,
               curveSmoothness: 0.3,
-              color: const Color(0xFF00E5A0),
+              color: widget.showExpenses
+                  ? const Color(0xFFFF6B6B)
+                  : const Color(0xFF00E5A0),
               barWidth: 2.5,
               isStrokeCapRound: true,
               dotData: FlDotData(
@@ -178,7 +185,9 @@ class _SpendingTrendChartState extends State<SpendingTrendChart> {
                   final isTouched = index == _touchedIndex;
                   return FlDotCirclePainter(
                     radius: isTouched ? 5 : 0,
-                    color: const Color(0xFF00E5A0),
+                    color: widget.showExpenses
+                        ? const Color(0xFFFF6B6B)
+                        : const Color(0xFF00E5A0),
                     strokeWidth: 2,
                     strokeColor: Colors.white,
                   );
@@ -189,10 +198,15 @@ class _SpendingTrendChartState extends State<SpendingTrendChart> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    const Color(0xFF00E5A0).withValues(alpha: 0.25),
-                    const Color(0xFF00E5A0).withValues(alpha: 0.0),
-                  ],
+                  colors: widget.showExpenses
+                      ? [
+                          const Color(0xFFFF6B6B).withValues(alpha: 0.25),
+                          const Color(0xFFFF6B6B).withValues(alpha: 0.0),
+                        ]
+                      : [
+                          const Color(0xFF00E5A0).withValues(alpha: 0.25),
+                          const Color(0xFF00E5A0).withValues(alpha: 0.0),
+                        ],
                 ),
               ),
             ),

@@ -53,7 +53,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       _selectedMonth,
       expensesOnly: _showExpenses,
     );
-    final trendData = provider.getDailySpendingTrend();
+    final trendData = _showExpenses
+        ? provider.getDailySpendingTrend()
+        : provider.getDailyIncomeTrend();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -138,11 +140,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             // ── Spending Trend ───────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Spending Trend (30 days)',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: Text(
+                  _showExpenses ? 'Spending Trend (30 days)' : 'Income Trend (30 days)',
+                  key: ValueKey(_showExpenses),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
               ),
             ).animate(delay: 200.ms).fadeIn(duration: 300.ms),
 
@@ -150,7 +156,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: SpendingTrendChart(data: trendData),
+              child: SpendingTrendChart(
+                key: ValueKey('trend_$_showExpenses'),
+                data: trendData,
+                showExpenses: _showExpenses,
+              ),
             ),
 
             const SizedBox(height: 32),

@@ -4,6 +4,7 @@ import '../../../providers/transaction_provider.dart';
 import '../../../providers/card_provider.dart';
 import '../../../widgets/app_text_field.dart';
 import '../../../widgets/app_button.dart';
+import '../../../core/utils/formatters.dart';
 import 'widgets/card_selector_sheet.dart';
 import '../../../core/constants/categories.dart';
 
@@ -54,7 +55,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   ];
 
   /// Display label for a stored category key (graceful fallback for old data).
-  String _labelFor(String key) => AppCategories.fromKey(key)?.label ?? key;
+  String _labelFor(String key) => AppCategories.fromKey(key)?.label ?? Formatters.capitalize(key);
 
   @override
   void initState() {

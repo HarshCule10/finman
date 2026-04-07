@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../data/models/transaction.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/constants/categories.dart';
 import '../../add_transaction/add_transaction_sheet.dart';
 
 class TransactionTile extends StatefulWidget {
@@ -310,7 +311,8 @@ class _TransactionTileState extends State<TransactionTile>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  widget.transaction.category,
+                                  AppCategories.fromKey(widget.transaction.category)?.label ?? 
+                                  Formatters.capitalize(widget.transaction.category),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 15,

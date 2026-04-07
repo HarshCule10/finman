@@ -48,7 +48,7 @@ class CategoryBreakdownList extends StatelessWidget {
 
           return _CategoryRow(
             icon: cat?.icon ?? Icons.category_rounded,
-            label: cat?.label ?? entry.key,
+            label: cat?.label ?? Formatters.capitalize(entry.key),
             amount: entry.value,
             percentage: pct,
             barFraction: barFraction,

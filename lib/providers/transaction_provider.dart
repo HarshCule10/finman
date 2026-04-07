@@ -306,6 +306,27 @@ class TransactionProvider extends ChangeNotifier {
     return result;
   }
 
+  /// Daily income totals for the past [days] days (income only).
+  /// Returns a list of maps with 'date' (DateTime) and 'amount' (double).
+  List<Map<String, dynamic>> getDailyIncomeTrend({int days = 30}) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final result = <Map<String, dynamic>>[];
+
+    for (int i = days - 1; i >= 0; i--) {
+      final day = today.subtract(Duration(days: i));
+      final dayEnd = day.add(const Duration(days: 1));
+      final total = allTransactions
+          .where((t) =>
+              t.isIncome &&
+              !t.date.isBefore(day) &&
+              t.date.isBefore(dayEnd))
+          .fold(0.0, (sum, t) => sum + t.amount);
+      result.add({'date': day, 'amount': total});
+    }
+    return result;
+  }
+
   /// All transactions for a specific category key within a month.
   /// Handles both key-stored and legacy label-stored transactions.
   List<Transaction> getTransactionsByCategory(String categoryKey, DateTime month) {
