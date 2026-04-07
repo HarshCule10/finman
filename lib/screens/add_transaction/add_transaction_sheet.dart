@@ -7,6 +7,7 @@ import '../../../widgets/app_button.dart';
 import '../../../core/utils/formatters.dart';
 import 'widgets/card_selector_sheet.dart';
 import '../../../core/constants/categories.dart';
+import '../../../widgets/app_snackbar.dart';
 
 import '../../../data/models/transaction.dart';
 import '../../../data/models/card_model.dart';
@@ -123,8 +124,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     if (!_formKey.currentState!.validate()) return;
     
     if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category')),
+      AppSnackBar.show(
+        context,
+        message: 'Please select a category',
+        isError: true,
       );
       return;
     }
@@ -161,8 +164,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       if (success) {
         Navigator.pop(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(provider.errorMessage ?? 'Failed to add transaction')),
+        AppSnackBar.show(
+          context,
+          message: provider.errorMessage ?? 'Failed to add transaction',
+          isError: true,
         );
       }
     }

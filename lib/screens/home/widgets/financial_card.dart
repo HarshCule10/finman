@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../data/models/card_model.dart';
 import '../../../providers/card_provider.dart';
+import '../../../widgets/app_snackbar.dart';
 
 /// A premium financial card widget with layered gradients, glassmorphism
 /// elements, holographic chip, and subtle motion-ready layout.
@@ -69,15 +70,15 @@ class _FinancialCardState extends State<FinancialCard> {
       
       if (context.mounted) {
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Card deleted successfully')),
+          AppSnackBar.show(
+            context,
+            message: 'Card deleted successfully',
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(cardProvider.errorMessage ?? 'Failed to delete card'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
+          AppSnackBar.show(
+            context,
+            message: cardProvider.errorMessage ?? 'Failed to delete card',
+            isError: true,
           );
         }
       }

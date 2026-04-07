@@ -8,6 +8,7 @@ import '../../data/services/storage_service.dart';
 import '../../providers/theme_provider.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
+import '../../widgets/app_snackbar.dart';
 import 'widgets/edit_profile_sheet.dart';
 import 'verify_pin_screen.dart';
 import 'set_pin_screen.dart';
@@ -68,22 +69,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
 
         // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile photo updated successfully'),
-            duration: Duration(seconds: 2),
-          ),
+        AppSnackBar.show(
+          context,
+          message: 'Profile photo updated successfully',
         );
       }
     } catch (e) {
       // Handle errors with user-friendly message
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update profile photo: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
+        AppSnackBar.show(
+          context,
+          message: 'Failed to update profile photo: ${e.toString()}',
+          isError: true,
         );
       }
     }
@@ -171,21 +168,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _profilePhotoPath = null;
         });
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile photo removed'),
-            duration: Duration(seconds: 2),
-          ),
+        AppSnackBar.show(
+          context,
+          message: 'Profile photo removed',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to remove photo: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
+        AppSnackBar.show(
+          context,
+          message: 'Failed to remove photo: ${e.toString()}',
+          isError: true,
         );
       }
     }
@@ -224,11 +217,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // UI will rebuild with new values from StorageService
       });
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-          duration: Duration(seconds: 2),
-        ),
+      AppSnackBar.show(
+        context,
+        message: 'Profile updated successfully',
       );
     }
   }

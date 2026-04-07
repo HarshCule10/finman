@@ -7,6 +7,7 @@ import '../../../providers/transaction_provider.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/constants/categories.dart';
 import '../../add_transaction/add_transaction_sheet.dart';
+import '../../../widgets/app_snackbar.dart';
 
 class TransactionTile extends StatefulWidget {
   final Transaction transaction;
@@ -168,33 +169,9 @@ class _TransactionTileState extends State<TransactionTile>
                     );
                     await provider.delete(widget.transaction.id);
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Row(
-                            children: [
-                              Icon(
-                                Icons.check_circle_rounded,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Transaction deleted',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                          backgroundColor: const Color(0xFF1C1C1E),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          margin: const EdgeInsets.all(16),
-                          duration: const Duration(seconds: 2),
-                        ),
+                      AppSnackBar.show(
+                        context,
+                        message: 'Transaction deleted',
                       );
                     }
                   },

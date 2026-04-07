@@ -6,6 +6,7 @@ import '../../../widgets/app_text_field.dart';
 import '../../../widgets/app_button.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
+import '../../../widgets/app_snackbar.dart';
 
 class AddCardSheet extends StatefulWidget {
   const AddCardSheet({super.key});
@@ -78,8 +79,10 @@ class _AddCardSheetState extends State<AddCardSheet> {
       if (success) {
         Navigator.pop(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(provider.errorMessage ?? 'Failed to add card')),
+        AppSnackBar.show(
+          context,
+          message: provider.errorMessage ?? 'Failed to add card',
+          isError: true,
         );
       }
     }

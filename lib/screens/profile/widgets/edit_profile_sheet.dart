@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/services/storage_service.dart';
 import '../../../widgets/app_button.dart';
 import '../../../widgets/app_text_field.dart';
+import '../../../widgets/app_snackbar.dart';
 
 /// Bottom sheet for editing profile information
 /// Allows users to update name, username, and currency
@@ -95,11 +96,10 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     } catch (e) {
       if (!mounted) return;
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to save changes: $e'),
-          backgroundColor: AppColors.expense,
-        ),
+      AppSnackBar.show(
+        context,
+        message: 'Failed to save changes: $e',
+        isError: true,
       );
       
       setState(() => _isSaving = false);

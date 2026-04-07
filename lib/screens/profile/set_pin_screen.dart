@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../data/services/secure_storage_service.dart';
 import '../../data/services/storage_service.dart';
 import '../../widgets/pin_input.dart';
+import '../../widgets/app_snackbar.dart';
 
 /// Screen for setting or changing PIN with confirmation.
 /// Displays a two-step flow: first entry and confirmation.
@@ -86,13 +87,9 @@ class _SetPINScreenState extends State<SetPINScreen> {
     if (!mounted) return;
 
     // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          widget.isChanging ? 'PIN changed successfully!' : 'PIN set successfully!',
-        ),
-        backgroundColor: AppColors.income,
-      ),
+    AppSnackBar.show(
+      context,
+      message: widget.isChanging ? 'PIN changed successfully!' : 'PIN set successfully!',
     );
 
     // Navigate back on success
