@@ -53,9 +53,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       _selectedMonth,
       expensesOnly: _showExpenses,
     );
-    final trendData = _showExpenses
-        ? provider.getDailySpendingTrend()
-        : provider.getDailyIncomeTrend();
+    final trendData = provider.getDailyTrendForMonth(
+      _selectedMonth,
+      isIncome: !_showExpenses,
+    );
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -143,7 +144,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
                 child: Text(
-                  _showExpenses ? 'Spending Trend (30 days)' : 'Income Trend (30 days)',
+                  '${_showExpenses ? 'Spending' : 'Income'} Trend (${DateFormat('MMMM').format(_selectedMonth)})',
                   key: ValueKey(_showExpenses),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,

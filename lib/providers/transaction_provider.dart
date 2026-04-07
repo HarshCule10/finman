@@ -285,45 +285,33 @@ class TransactionProvider extends ChangeNotifier {
     return sorted;
   }
 
-  /// Daily spending totals for the past [days] days (expenses only).
-  /// Returns a list of maps with 'date' (DateTime) and 'amount' (double).
-  List<Map<String, dynamic>> getDailySpendingTrend({int days = 30}) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+  /// Returns daily totals for a specific month/year, filtered by income status.
+  /// Result is a list of maps with 'date' (DateTime) and 'amount' (double).
+  List<Map<String, dynamic>> getDailyTrendForMonth(
+    DateTime month, {
+    required bool isIncome,
+  }) {
+    final daysInMonth = DateUtils.getDaysInMonth(month.year, month.month);
     final result = <Map<String, dynamic>>[];
+    final transactions = allTransactions;
 
-    for (int i = days - 1; i >= 0; i--) {
-      final day = today.subtract(Duration(days: i));
-      final dayEnd = day.add(const Duration(days: 1));
-      final total = allTransactions
-          .where((t) =>
-              !t.isIncome &&
-              !t.date.isBefore(day) &&
-              t.date.isBefore(dayEnd))
-          .fold(0.0, (sum, t) => sum + t.amount);
-      result.add({'date': day, 'amount': total});
+    // Iterate through each day of the month
+    for (int i = 1; i <= daysInMonth; i++) {
+      final dayStart = DateTime(month.year, month.month, i);
+      final dayEnd = dayStart.add(const Duration(days: 1));
+
+      final dayTotal = transactions.where((t) {
+        return t.isIncome == isIncome &&
+            !t.date.isBefore(dayStart) &&
+            t.date.isBefore(dayEnd);
+      }).fold(0.0, (sum, t) => sum + t.amount);
+
+      result.add({
+        'date': dayStart,
+        'amount': dayTotal,
+      });
     }
-    return result;
-  }
 
-  /// Daily income totals for the past [days] days (income only).
-  /// Returns a list of maps with 'date' (DateTime) and 'amount' (double).
-  List<Map<String, dynamic>> getDailyIncomeTrend({int days = 30}) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final result = <Map<String, dynamic>>[];
-
-    for (int i = days - 1; i >= 0; i--) {
-      final day = today.subtract(Duration(days: i));
-      final dayEnd = day.add(const Duration(days: 1));
-      final total = allTransactions
-          .where((t) =>
-              t.isIncome &&
-              !t.date.isBefore(day) &&
-              t.date.isBefore(dayEnd))
-          .fold(0.0, (sum, t) => sum + t.amount);
-      result.add({'date': day, 'amount': total});
-    }
     return result;
   }
 
