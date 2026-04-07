@@ -5,7 +5,6 @@ import 'app.dart';
 import 'data/services/secure_storage_service.dart';
 import 'data/services/storage_service.dart';
 import 'providers/card_provider.dart';
-import 'providers/category_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/transaction_provider.dart';
 
@@ -15,9 +14,6 @@ void main() async {
 
   final storage = StorageService();
   await storage.init();
-  
-  // Initialize default categories on first app launch
-  await storage.initializeDefaultCategories();
 
   final secureStorage = SecureStorageService();
 
@@ -29,7 +25,6 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ThemeProvider(storage)),
         ChangeNotifierProvider(create: (_) => CardProvider(storage)),
         ChangeNotifierProvider(create: (_) => TransactionProvider(storage)),
-        ChangeNotifierProvider(create: (_) => CategoryProvider(storage)),
       ],
       child: const FinManApp(),
     ),

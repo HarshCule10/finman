@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/models/card_model.dart';
+import '../../../data/models/card_model.dart';
 
 /// Modal bottom sheet for selecting a card during transaction creation.
 /// Displays cards with nicknames (when present) and gradient previews.

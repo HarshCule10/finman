@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/theme/app_colors.dart';
-import '../data/services/storage_service.dart';
-import 'app_button.dart';
-import 'app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../data/services/storage_service.dart';
+import '../../../widgets/app_button.dart';
+import '../../../widgets/app_text_field.dart';
 
 /// Bottom sheet for editing profile information
 /// Allows users to update name, username, and currency

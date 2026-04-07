@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../data/services/storage_service.dart';
 import '../../providers/card_provider.dart';
-import '../../widgets/card_carousel.dart';
+import 'widgets/card_carousel.dart';
 import 'widgets/add_card_sheet.dart';
 import 'widgets/daily_transactions.dart';
 import '../add_transaction/add_transaction_sheet.dart';

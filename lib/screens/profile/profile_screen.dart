@@ -8,7 +8,7 @@ import '../../data/services/storage_service.dart';
 import '../../providers/theme_provider.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
-import '../../widgets/edit_profile_sheet.dart';
+import 'widgets/edit_profile_sheet.dart';
 import 'verify_pin_screen.dart';
 import 'set_pin_screen.dart';
 

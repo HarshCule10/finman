@@ -6,13 +6,11 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/transaction.dart';
 import '../models/card_model.dart';
-import '../models/category_model.dart';
 
 class StorageService {
   static const _transactionsBox = 'transactions';
   static const _settingsBox = 'settings';
   static const _cardsKey = 'cards';
-  static const _categoriesKey = 'categories';
 
   late Box<Transaction> _transactions;
   late Box _settings;
@@ -189,142 +187,5 @@ class StorageService {
     await _saveCards(cards);
   }
 
-  // Categories — Secure storage with JSON serialization
-  
-  /// Helper method to load categories from secure storage
-  Future<List<CategoryModel>> _loadCategories() async {
-    try {
-      final categoriesJson = await _secureStorage.read(key: _categoriesKey);
-      if (categoriesJson == null) return [];
-      
-      final List<dynamic> categoriesList = jsonDecode(categoriesJson);
-      return categoriesList.map((json) => CategoryModel.fromJson(json)).toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  /// Helper method to save categories to secure storage
-  Future<void> _saveCategories(List<CategoryModel> categories) async {
-    final categoriesJson = jsonEncode(categories.map((c) => c.toJson()).toList());
-    await _secureStorage.write(key: _categoriesKey, value: categoriesJson);
-  }
-
-  /// Retrieves all stored categories
-  Future<List<CategoryModel>> getAllCategories() async {
-    return await _loadCategories();
-  }
-
-  /// Adds a new category to secure storage
-  Future<void> addCategory(CategoryModel category) async {
-    final categories = await _loadCategories();
-    categories.add(category);
-    await _saveCategories(categories);
-  }
-
-  /// Updates an existing category in secure storage
-  Future<void> updateCategory(CategoryModel category) async {
-    final categories = await _loadCategories();
-    final index = categories.indexWhere((c) => c.id == category.id);
-    if (index != -1) {
-      categories[index] = category;
-      await _saveCategories(categories);
-    }
-  }
-
-  /// Deletes a category from secure storage
-  Future<void> deleteCategory(String id) async {
-    final categories = await _loadCategories();
-    categories.removeWhere((c) => c.id == id);
-    await _saveCategories(categories);
-  }
-
-  /// Retrieves all favorite categories
-  Future<List<CategoryModel>> getFavoriteCategories() async {
-    final categories = await _loadCategories();
-    return categories.where((c) => c.isFavorite).toList();
-  }
-
-  // Transaction filtering methods
-
-  /// Retrieves transactions within a specific date range (inclusive)
-  List<Transaction> getTransactionsInDateRange(DateTime start, DateTime end) {
-    return getAllTransactions()
-        .where((t) => 
-            (t.date.isAfter(start) || t.date.isAtSameMomentAs(start)) &&
-            (t.date.isBefore(end) || t.date.isAtSameMomentAs(end)))
-        .toList();
-  }
-
-  /// Retrieves transactions filtered by category
-  List<Transaction> getTransactionsByCategory(String category) {
-    return getAllTransactions()
-        .where((t) => t.category == category)
-        .toList();
-  }
-
-  // Default categories initialization
-
-  /// Default categories to initialize on first app launch
-  static final List<CategoryModel> defaultCategories = [
-    CategoryModel(
-      id: 'cat_food',
-      name: 'Food & Dining',
-      iconName: 'restaurant',
-      colorValue: 0xFFFF6B6B,
-    ),
-    CategoryModel(
-      id: 'cat_transport',
-      name: 'Transportation',
-      iconName: 'directions_car',
-      colorValue: 0xFF4ECDC4,
-    ),
-    CategoryModel(
-      id: 'cat_shopping',
-      name: 'Shopping',
-      iconName: 'shopping_bag',
-      colorValue: 0xFFFFBE0B,
-    ),
-    CategoryModel(
-      id: 'cat_entertainment',
-      name: 'Entertainment',
-      iconName: 'movie',
-      colorValue: 0xFF9B59B6,
-    ),
-    CategoryModel(
-      id: 'cat_bills',
-      name: 'Bills & Utilities',
-      iconName: 'receipt',
-      colorValue: 0xFF3498DB,
-    ),
-    CategoryModel(
-      id: 'cat_health',
-      name: 'Healthcare',
-      iconName: 'local_hospital',
-      colorValue: 0xFFE74C3C,
-    ),
-    CategoryModel(
-      id: 'cat_education',
-      name: 'Education',
-      iconName: 'school',
-      colorValue: 0xFF2ECC71,
-    ),
-    CategoryModel(
-      id: 'cat_other',
-      name: 'Other',
-      iconName: 'more_horiz',
-      colorValue: 0xFF95A5A6,
-    ),
-  ];
-
-  /// Initializes default categories on first app launch
-  /// Only adds categories if no categories exist in storage
-  Future<void> initializeDefaultCategories() async {
-    final existingCategories = await getAllCategories();
-    
-    // Only initialize if no categories exist
-    if (existingCategories.isEmpty) {
-      await _saveCategories(defaultCategories);
-    }
-  }
 }
+

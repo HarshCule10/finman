@@ -4,7 +4,7 @@ import '../../../providers/transaction_provider.dart';
 import '../../../providers/card_provider.dart';
 import '../../../widgets/app_text_field.dart';
 import '../../../widgets/app_button.dart';
-import '../../../widgets/card_selector_sheet.dart';
+import 'widgets/card_selector_sheet.dart';
 import '../../../core/constants/categories.dart';
 
 import '../../../data/models/transaction.dart';

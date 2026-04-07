@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/models/card_model.dart';
+import '../../../data/models/card_model.dart';
 import 'financial_card.dart';
 
 /// A horizontally scrollable carousel widget that displays financial cards

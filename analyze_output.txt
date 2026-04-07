@@ -25,7 +25,7 @@
    info - Don't invoke 'print' in production code - test_currency_manual.dart:17:3 - avoid_print
 
 flutter : 23 issues 
-found. (ran in 2.2s)
+found. (ran in 7.6s)
 At line:1 char:1
 + flutter analyze 
 --no-pub 2>&1 | Out-File 
@@ -36,7 +36,7 @@ At line:1 char:1
     + CategoryInfo        
       : NotSpecified: (2  
   3 issues found. (ran    
- in 2.2s):String) [],     
+ in 7.6s):String) [],     
 RemoteException
     + FullyQualifiedError 
    Id : NativeCommandErr  

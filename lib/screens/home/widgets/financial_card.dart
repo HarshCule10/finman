@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../data/models/card_model.dart';
-import '../providers/card_provider.dart';
+import '../../../data/models/card_model.dart';
+import '../../../providers/card_provider.dart';
 
 /// A premium financial card widget with layered gradients, glassmorphism
 /// elements, holographic chip, and subtle motion-ready layout.
