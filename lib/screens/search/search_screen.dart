@@ -86,17 +86,14 @@ class _SearchScreenState extends State<SearchScreen> {
                     ? Colors.white.withValues(alpha: 0.06)
                     : Colors.black.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: _focusNode.hasFocus
-                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
-                      : Colors.transparent,
-                ),
               ),
               child: TextField(
                 controller: _searchController,
                 focusNode: _focusNode,
                 onChanged: (v) => setState(() => _query = v),
                 style: const TextStyle(fontSize: 15),
+                autocorrect: false,
+                cursorColor: Theme.of(context).colorScheme.primary,
                 decoration: InputDecoration(
                   hintText: 'Search by note or category...',
                   hintStyle: TextStyle(
@@ -108,10 +105,12 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   prefixIcon: Icon(
                     Icons.search_rounded,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.4),
+                    color: _focusNode.hasFocus
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.4),
                     size: 22,
                   ),
                   suffixIcon: _query.isNotEmpty
@@ -132,9 +131,21 @@ class _SearchScreenState extends State<SearchScreen> {
                           },
                         )
                       : null,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
+                  ),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
