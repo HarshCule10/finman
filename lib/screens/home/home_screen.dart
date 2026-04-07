@@ -36,39 +36,6 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      actions: [
-        // Search icon
-        IconButton(
-          icon: const Icon(Icons.search),
-          onPressed: () {
-            // TODO: Implement search functionality
-          },
-        ),
-        // Notification icon with badge
-        Stack(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined),
-              onPressed: () {
-                // TODO: Implement notifications
-              },
-            ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.error,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(width: 8),
-      ],
     );
   }
 
