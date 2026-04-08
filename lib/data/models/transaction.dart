@@ -10,6 +10,9 @@ class Transaction extends HiveObject {
   final DateTime createdAt;
   final String? cardId;
 
+  final String? recurringId;
+  final String? frequency;
+
   Transaction({
     required this.id,
     required this.amount,
@@ -19,6 +22,8 @@ class Transaction extends HiveObject {
     required this.isIncome,
     DateTime? createdAt,
     this.cardId,
+    this.recurringId,
+    this.frequency,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Transaction copyWith({
@@ -29,6 +34,8 @@ class Transaction extends HiveObject {
     String? note,
     bool? isIncome,
     String? cardId,
+    String? recurringId,
+    String? frequency,
   }) {
     return Transaction(
       id: id ?? this.id,
@@ -39,6 +46,8 @@ class Transaction extends HiveObject {
       isIncome: isIncome ?? this.isIncome,
       createdAt: createdAt,
       cardId: cardId ?? this.cardId,
+      recurringId: recurringId ?? this.recurringId,
+      frequency: frequency ?? this.frequency,
     );
   }
 }
@@ -62,13 +71,15 @@ class TransactionAdapter extends TypeAdapter<Transaction> {
       isIncome: fields[5] as bool,
       createdAt: fields[6] as DateTime?,
       cardId: fields[7] as String?,
+      recurringId: fields[8] as String?,
+      frequency: fields[9] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Transaction obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -84,7 +95,11 @@ class TransactionAdapter extends TypeAdapter<Transaction> {
       ..writeByte(6)
       ..write(obj.createdAt)
       ..writeByte(7)
-      ..write(obj.cardId);
+      ..write(obj.cardId)
+      ..writeByte(8)
+      ..write(obj.recurringId)
+      ..writeByte(9)
+      ..write(obj.frequency);
   }
 
   @override

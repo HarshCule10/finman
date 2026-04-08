@@ -17,7 +17,22 @@ class TransactionProvider extends ChangeNotifier {
   TransactionProvider(this._storage);
 
   DateTime get selectedMonth => _selectedMonth;
-  List<Transaction> get transactions => _transactions;
+  
+  List<Transaction> get rawTransactions => _transactions.isNotEmpty 
+      ? _transactions 
+      : _storage.getAllTransactions();
+      
+  List<Transaction> get allTransactions {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return rawTransactions.where((t) {
+      if (t.recurringId == null) return true;
+      final txDate = DateTime(t.date.year, t.date.month, t.date.day);
+      return !txDate.isAfter(today);
+    }).toList();
+  }
+
+  List<Transaction> get transactions => allTransactions;
   String? get errorMessage => _errorMessage;
 
   void clearError() {
@@ -129,9 +144,7 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
-  List<Transaction> get allTransactions => _transactions.isNotEmpty 
-      ? _transactions 
-      : _storage.getAllTransactions();
+  // allTransactions getter was replaced and moved to the top.
 
   List<Transaction> get monthTransactions =>
       allTransactions
@@ -191,6 +204,138 @@ class TransactionProvider extends ChangeNotifier {
       debugPrint('Error adding transaction: $e');
       _errorMessage = 'Failed to add transaction. Please try again.';
       notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> addRecurring({
+    required double amount,
+    required String category,
+    required DateTime startDate,
+    required DateTime endDate,
+    required String frequency,
+    required bool isIncome,
+    String note = '',
+    String? cardId,
+  }) async {
+    try {
+      final recurringId = _uuid.v4();
+      DateTime current = startDate;
+      
+      while (current.isBefore(endDate) || current.isAtSameMomentAs(endDate)) {
+        final transaction = Transaction(
+          id: _uuid.v4(),
+          amount: amount,
+          category: category,
+          date: current,
+          note: note,
+          isIncome: isIncome,
+          cardId: cardId,
+          recurringId: recurringId,
+          frequency: frequency,
+        );
+        await _storage.addTransaction(transaction);
+        
+        switch (frequency) {
+          case 'Daily':
+            current = current.add(const Duration(days: 1));
+            break;
+          case 'Weekly':
+            current = current.add(const Duration(days: 7));
+            break;
+          case 'Monthly':
+            current = DateTime(current.year, current.month + 1, current.day);
+            break;
+          case 'Yearly':
+            current = DateTime(current.year + 1, current.month, current.day);
+            break;
+          default:
+            current = current.add(const Duration(days: 30));
+        }
+      }
+      
+      _transactions = _storage.getAllTransactions();
+      _invalidateCache();
+      _errorMessage = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Failed to set up recurring transactions. Please try again.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Returns a list of grouped future recurring transactions.
+  List<Map<String, dynamic>> getRecurringGroups() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    final groups = <String, List<Transaction>>{};
+    for (final t in rawTransactions) {
+      if (t.recurringId != null) {
+        final txDate = DateTime(t.date.year, t.date.month, t.date.day);
+        if (txDate.isAfter(today)) {
+          groups.putIfAbsent(t.recurringId!, () => []).add(t);
+        }
+      }
+    }
+    
+    final result = <Map<String, dynamic>>[];
+    groups.forEach((id, txs) {
+      txs.sort((a, b) => a.date.compareTo(b.date));
+      result.add({
+        'recurringId': id,
+        'nextTransaction': txs.first,
+        'remainingCount': txs.length,
+      });
+    });
+    
+    result.sort((a, b) => (a['nextTransaction'] as Transaction).date.compareTo((b['nextTransaction'] as Transaction).date));
+    return result;
+  }
+
+  Future<bool> cancelNextPayment(String recurringId) async {
+    try {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      
+      final futures = rawTransactions.where((t) {
+        if (t.recurringId != recurringId) return false;
+        final txDate = DateTime(t.date.year, t.date.month, t.date.day);
+        return txDate.isAfter(today);
+      }).toList();
+      
+      if (futures.isNotEmpty) {
+        futures.sort((a, b) => a.date.compareTo(b.date));
+        await delete(futures.first.id);
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> cancelEntireSubscription(String recurringId) async {
+    try {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      
+      final futures = rawTransactions.where((t) {
+        if (t.recurringId != recurringId) return false;
+        final txDate = DateTime(t.date.year, t.date.month, t.date.day);
+        return txDate.isAfter(today);
+      }).map((t) => t.id).toList();
+      
+      for (final id in futures) {
+        await _storage.deleteTransaction(id);
+      }
+      
+      _transactions = _storage.getAllTransactions();
+      _invalidateCache();
+      notifyListeners();
+      return true;
+    } catch (e) {
       return false;
     }
   }

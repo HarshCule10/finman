@@ -12,6 +12,7 @@ import '../../widgets/app_snackbar.dart';
 import 'widgets/edit_profile_sheet.dart';
 import 'verify_pin_screen.dart';
 import 'set_pin_screen.dart';
+import 'recurring_payments_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -374,6 +375,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: 'Currency',
                 subtitle: storage.currency,
                 onTap: _showEditProfileSheet,
+              ),
+
+              // Recurring Section
+              const SectionHeader(title: 'Subscriptions & Recurring'),
+              SettingsCard(
+                icon: Icons.autorenew,
+                title: 'Recurring Payments',
+                subtitle: 'Manage automated transactions',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const RecurringPaymentsScreen(),
+                    ),
+                  );
+                },
               ),
               
               // Security Section

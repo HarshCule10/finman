@@ -45,6 +45,12 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   CardModel? _selectedCard;
   List<CardModel> _availableCards = [];
   
+  // Recurring state
+  bool _isRecurring = false;
+  String _selectedFrequency = 'Monthly';
+  DateTime? _recurringEndDate;
+  static const List<String> _frequencies = ['Daily', 'Weekly', 'Monthly', 'Yearly'];
+  
   // Category keys stored in Transaction.category; labels resolved via AppCategories
   static const List<String> _expenseCategoryKeys = [
     'food', 'transport', 'shopping', 'entertainment',
@@ -132,6 +138,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       return;
     }
 
+    if (_isRecurring && _recurringEndDate == null) {
+      AppSnackBar.show(
+        context,
+        message: 'Please select an end date for recurring transaction',
+        isError: true,
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     final provider = Provider.of<TransactionProvider>(context, listen: false);
@@ -149,14 +164,27 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         cardId: _selectedCardId,
       );
     } else {
-      success = await provider.add(
-        amount: amount,
-        category: _selectedCategory!,
-        date: _selectedDate,
-        isIncome: _isIncome,
-        note: _descriptionController.text.trim(),
-        cardId: _selectedCardId,
-      );
+      if (_isRecurring) {
+        success = await provider.addRecurring(
+          amount: amount,
+          category: _selectedCategory!,
+          startDate: _selectedDate,
+          endDate: _recurringEndDate!,
+          frequency: _selectedFrequency,
+          isIncome: _isIncome,
+          note: _descriptionController.text.trim(),
+          cardId: _selectedCardId,
+        );
+      } else {
+        success = await provider.add(
+          amount: amount,
+          category: _selectedCategory!,
+          date: _selectedDate,
+          isIncome: _isIncome,
+          note: _descriptionController.text.trim(),
+          cardId: _selectedCardId,
+        );
+      }
     }
 
     if (mounted) {
@@ -379,6 +407,79 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 ),
               ),
               const SizedBox(height: 16),
+              if (widget.transaction == null) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Recurring Payment', style: Theme.of(context).textTheme.titleMedium),
+                    Switch(
+                      value: _isRecurring,
+                      onChanged: (val) => setState(() {
+                        _isRecurring = val;
+                        if (val && _recurringEndDate == null) {
+                          _recurringEndDate = _selectedDate.add(const Duration(days: 30));
+                        }
+                      }),
+                    ),
+                  ],
+                ),
+                if (_isRecurring) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedFrequency,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                          items: _frequencies.map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
+                          onChanged: (val) => setState(() => _selectedFrequency = val!),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 1,
+                        child: GestureDetector(
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _recurringEndDate ?? _selectedDate,
+                              firstDate: _selectedDate,
+                              lastDate: DateTime(2100),
+                            );
+                            if (picked != null) {
+                              setState(() => _recurringEndDate = picked);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Theme.of(context).colorScheme.outline),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('End Date', style: Theme.of(context).textTheme.labelSmall),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _recurringEndDate != null 
+                                      ? '${_recurringEndDate!.year}-${_recurringEndDate!.month.toString().padLeft(2, '0')}-${_recurringEndDate!.day.toString().padLeft(2, '0')}'
+                                      : 'Select date',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 16),
+              ],
               AppTextField(
                 label: 'Description',
                 hint: 'Add a description',
