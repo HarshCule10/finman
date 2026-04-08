@@ -7,6 +7,7 @@ import '../../../data/services/storage_service.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../../core/constants/categories.dart';
 import '../../../widgets/app_snackbar.dart';
+import '../../add_transaction/add_transaction_sheet.dart';
 
 class RecurringPaymentTile extends StatelessWidget {
   final Map<String, dynamic> groupData;
@@ -35,7 +36,7 @@ class RecurringPaymentTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -46,8 +47,22 @@ class RecurringPaymentTile extends StatelessWidget {
         groupTag: 'recurring_payments',
         endActionPane: ActionPane(
           motion: const DrawerMotion(),
-          extentRatio: 0.5,
+          extentRatio: 0.7,
           children: [
+            SlidableAction(
+              onPressed: (context) {
+                AddTransactionSheet.show(
+                  context,
+                  transaction: transaction,
+                  isEditingRecurring: true,
+                  recurringId: recurringId,
+                );
+              },
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              icon: Icons.edit,
+              label: 'Edit',
+            ),
             SlidableAction(
               onPressed: (context) async {
                 final success = await provider.cancelNextPayment(recurringId);
@@ -86,7 +101,7 @@ class RecurringPaymentTile extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: category.color.withValues(alpha: 0.2),
+                      color: category.color.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(category.icon, color: category.color),
@@ -107,7 +122,7 @@ class RecurringPaymentTile extends StatelessWidget {
                           Text(
                             transaction.note,
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                 ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

@@ -14,15 +14,31 @@ import '../../../data/models/card_model.dart';
 
 class AddTransactionSheet extends StatefulWidget {
   final Transaction? transaction;
+  final bool isEditingRecurring;
+  final String? recurringId;
 
-  const AddTransactionSheet({super.key, this.transaction});
+  const AddTransactionSheet({
+    super.key,
+    this.transaction,
+    this.isEditingRecurring = false,
+    this.recurringId,
+  });
 
-  static Future<void> show(BuildContext context, {Transaction? transaction}) {
+  static Future<void> show(
+    BuildContext context, {
+    Transaction? transaction,
+    bool isEditingRecurring = false,
+    String? recurringId,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => AddTransactionSheet(transaction: transaction),
+      builder: (_) => AddTransactionSheet(
+        transaction: transaction,
+        isEditingRecurring: isEditingRecurring,
+        recurringId: recurringId,
+      ),
     );
   }
 
@@ -76,6 +92,27 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       _selectedDate = widget.transaction!.date;
       _selectedCategory = widget.transaction!.category;
       _selectedCardId = widget.transaction!.cardId;
+
+      if (widget.isEditingRecurring) {
+        _isRecurring = true;
+        _selectedFrequency = widget.transaction!.frequency ?? 'Monthly';
+        // endDate is not stored in individual tx, but we can infer it or just let user pick new one
+        // For simplicity, we'll try to find the latest tx in provider later, but for now set a default
+      }
+    }
+    
+    if (widget.isEditingRecurring) {
+      // Find the recurring end date if we're editing
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final provider = Provider.of<TransactionProvider>(context, listen: false);
+        final futures = provider.rawTransactions.where((t) => t.recurringId == widget.recurringId).toList();
+        if (futures.isNotEmpty) {
+          futures.sort((a, b) => a.date.compareTo(b.date));
+          setState(() {
+            _recurringEndDate = futures.last.date;
+          });
+        }
+      });
     }
   }
 
@@ -153,7 +190,18 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     
     bool success;
-    if (widget.transaction != null) {
+    if (widget.isEditingRecurring && widget.recurringId != null) {
+      success = await provider.updateRecurring(
+        recurringId: widget.recurringId!,
+        amount: amount,
+        category: _selectedCategory!,
+        endDate: _recurringEndDate!,
+        frequency: _selectedFrequency,
+        isIncome: _isIncome,
+        note: _descriptionController.text.trim(),
+        cardId: _selectedCardId,
+      );
+    } else if (widget.transaction != null) {
       success = await provider.update(
         id: widget.transaction!.id,
         amount: amount,
@@ -223,7 +271,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    widget.transaction != null ? 'Edit Transaction' : 'Add Transaction',
+                    widget.isEditingRecurring 
+                      ? 'Edit Recurring Payment'
+                      : widget.transaction != null ? 'Edit Transaction' : 'Add Transaction',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -240,25 +290,28 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 children: [
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() {
+                      onTap: widget.isEditingRecurring ? null : () => setState(() {
                         _isIncome = false;
                         _selectedCategory = null; // Reset category when switching type
                       }),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: !_isIncome ? Theme.of(context).colorScheme.error.withValues(alpha: 0.2) : Colors.transparent,
+                          color: !_isIncome ? Theme.of(context).colorScheme.error.withOpacity(0.2) : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: !_isIncome ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.outline,
                           ),
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          'Expense',
-                          style: TextStyle(
-                            color: !_isIncome ? Theme.of(context).colorScheme.error : null,
-                            fontWeight: FontWeight.bold,
+                        child: Opacity(
+                          opacity: widget.isEditingRecurring && _isIncome ? 0.5 : 1.0,
+                          child: Text(
+                            'Expense',
+                            style: TextStyle(
+                              color: !_isIncome ? Theme.of(context).colorScheme.error : null,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -267,25 +320,28 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() {
+                      onTap: widget.isEditingRecurring ? null : () => setState(() {
                         _isIncome = true;
                         _selectedCategory = null; // Reset category when switching type
                       }),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: _isIncome ? Colors.green.withValues(alpha: 0.2) : Colors.transparent,
+                          color: _isIncome ? Colors.green.withOpacity(0.2) : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: _isIncome ? Colors.green : Theme.of(context).colorScheme.outline,
                           ),
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          'Income',
-                          style: TextStyle(
-                            color: _isIncome ? Colors.green : null,
-                            fontWeight: FontWeight.bold,
+                        child: Opacity(
+                          opacity: widget.isEditingRecurring && !_isIncome ? 0.5 : 1.0,
+                          child: Text(
+                            'Income',
+                            style: TextStyle(
+                              color: _isIncome ? Colors.green : null,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -388,33 +444,41 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               ),
               const SizedBox(height: 16),
               GestureDetector(
-                onTap: _selectDate,
+                onTap: widget.isEditingRecurring ? null : _selectDate,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   decoration: BoxDecoration(
                     border: Border.all(color: Theme.of(context).colorScheme.outline),
                     borderRadius: BorderRadius.circular(12),
+                    color: widget.isEditingRecurring ? Theme.of(context).disabledColor.withOpacity(0.05) : null,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Date: ${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
+                        style: TextStyle(
+                          color: widget.isEditingRecurring ? Theme.of(context).disabledColor : null,
+                        ),
                       ),
-                      const Icon(Icons.calendar_today, size: 20),
+                      Icon(
+                        Icons.calendar_today, 
+                        size: 20,
+                        color: widget.isEditingRecurring ? Theme.of(context).disabledColor : null,
+                      ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              if (widget.transaction == null) ...[
+              if (widget.transaction == null || widget.isEditingRecurring) ...[
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Recurring Payment', style: Theme.of(context).textTheme.titleMedium),
                     Switch(
                       value: _isRecurring,
-                      onChanged: (val) => setState(() {
+                      onChanged: widget.isEditingRecurring ? null : (val) => setState(() {
                         _isRecurring = val;
                         if (val && _recurringEndDate == null) {
                           _recurringEndDate = _selectedDate.add(const Duration(days: 30));
@@ -487,7 +551,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               ),
               const SizedBox(height: 32),
               AppButton(
-                label: widget.transaction != null ? 'Update Transaction' : 'Save Transaction',
+                label: widget.isEditingRecurring 
+                    ? 'Update Recurring Payments'
+                    : widget.transaction != null ? 'Update Transaction' : 'Save Transaction',
                 isLoading: _isLoading,
                 onPressed: _submit,
               ),

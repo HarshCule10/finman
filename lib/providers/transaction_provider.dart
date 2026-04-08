@@ -266,6 +266,90 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateRecurring({
+    required String recurringId,
+    required double amount,
+    required String category,
+    required DateTime endDate,
+    required String frequency,
+    required bool isIncome,
+    String note = '',
+    String? cardId,
+  }) async {
+    try {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      // 1. Identify future transactions for this recurring group
+      final futures = rawTransactions.where((t) {
+        if (t.recurringId != recurringId) return false;
+        final txDate = DateTime(t.date.year, t.date.month, t.date.day);
+        return txDate.isAfter(today);
+      }).toList();
+
+      if (futures.isEmpty) {
+        _errorMessage = 'No future payments found to update.';
+        notifyListeners();
+        return false;
+      }
+
+      // 2. Sort to find the "next" scheduled date (pivot)
+      futures.sort((a, b) => a.date.compareTo(b.date));
+      DateTime nextDate = futures.first.date;
+
+      // 3. Delete all future transactions in this group
+      for (final tx in futures) {
+        await _storage.deleteTransaction(tx.id);
+      }
+
+      // 4. Re-generate from nextDate to new endDate
+      DateTime current = nextDate;
+      while (current.isBefore(endDate) || current.isAtSameMomentAs(endDate)) {
+        final transaction = Transaction(
+          id: _uuid.v4(),
+          amount: amount,
+          category: category,
+          date: current,
+          note: note,
+          isIncome: isIncome,
+          cardId: cardId,
+          recurringId: recurringId,
+          frequency: frequency,
+        );
+        await _storage.addTransaction(transaction);
+
+        switch (frequency) {
+          case 'Daily':
+            current = current.add(const Duration(days: 1));
+            break;
+          case 'Weekly':
+            current = current.add(const Duration(days: 7));
+            break;
+          case 'Monthly':
+            // Handle month overflow gracefully by allowing DateTime constructor to roll over
+            current = DateTime(current.year, current.month + 1, current.day);
+            break;
+          case 'Yearly':
+            current = DateTime(current.year + 1, current.month, current.day);
+            break;
+          default:
+            current = current.add(const Duration(days: 30));
+        }
+      }
+
+      _transactions = _storage.getAllTransactions();
+      _invalidateCache();
+      _errorMessage = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('Error updating recurring transactions: $e');
+      _errorMessage = 'Failed to update recurring transactions. Please try again.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Returns a list of grouped future recurring transactions.
   List<Map<String, dynamic>> getRecurringGroups() {
     final now = DateTime.now();
