@@ -26,10 +26,36 @@ class TransactionProvider extends ChangeNotifier {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     return rawTransactions.where((t) {
+      if (t.isHidden) return false;
       if (t.recurringId == null) return true;
       final txDate = DateTime(t.date.year, t.date.month, t.date.day);
       return !txDate.isAfter(today);
     }).toList();
+  }
+
+  List<Transaction> get vaultTransactions {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return rawTransactions.where((t) {
+      if (!t.isHidden) return false;
+      if (t.recurringId != null) {
+        final txDate = DateTime(t.date.year, t.date.month, t.date.day);
+        if (txDate.isAfter(today)) return false;
+      }
+      return true;
+    }).toList()..sort((a, b) => b.date.compareTo(a.date));
+  }
+
+  Future<void> toggleHide(String id) async {
+    final txIndex = rawTransactions.indexWhere((t) => t.id == id);
+    if (txIndex >= 0) {
+      final tx = rawTransactions[txIndex];
+      final updated = tx.copyWith(isHidden: !tx.isHidden);
+      await _storage.updateTransaction(updated);
+      _transactions = _storage.getAllTransactions();
+      _invalidateCache();
+      notifyListeners();
+    }
   }
 
   List<Transaction> get transactions => allTransactions;
@@ -59,7 +85,7 @@ class TransactionProvider extends ChangeNotifier {
   /// Returns transactions within the specified date range
   List<Transaction> getTransactionsInRange(DateRange range) {
     try {
-      return _transactions
+      return allTransactions
           .where((t) => range.contains(t.date))
           .toList();
     } catch (e) {
@@ -625,7 +651,7 @@ class TransactionProvider extends ChangeNotifier {
       7,
       (_) => {'income': 0.0, 'expense': 0.0},
     );
-    for (final t in _storage.getAllTransactions()) {
+    for (final t in allTransactions) {
       final dayOffset = t.date
           .difference(
               DateTime(weekStart.year, weekStart.month, weekStart.day))
@@ -656,7 +682,7 @@ class TransactionProvider extends ChangeNotifier {
       final clampedEnd = weekEnd.isAfter(lastDay) ? lastDay : weekEnd;
       weeks.add({'income': 0.0, 'expense': 0.0});
 
-      for (final t in _storage.getAllTransactions()) {
+      for (final t in allTransactions) {
         final d = DateTime(t.date.year, t.date.month, t.date.day);
         if (!d.isBefore(weekStart) && !d.isAfter(clampedEnd)) {
           if (t.isIncome) {

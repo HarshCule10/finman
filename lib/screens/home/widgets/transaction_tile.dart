@@ -11,8 +11,13 @@ import '../../../widgets/app_snackbar.dart';
 
 class TransactionTile extends StatefulWidget {
   final Transaction transaction;
+  final bool isVaultMode;
 
-  const TransactionTile({super.key, required this.transaction});
+  const TransactionTile({
+    super.key,
+    required this.transaction,
+    this.isVaultMode = false,
+  });
 
   @override
   State<TransactionTile> createState() => _TransactionTileState();
@@ -109,7 +114,7 @@ class _TransactionTileState extends State<TransactionTile>
           key: ValueKey(widget.transaction.id),
           endActionPane: ActionPane(
             motion: const BehindMotion(),
-            extentRatio: 0.42,
+            extentRatio: 0.65,
             children: [
               // Edit action — custom pill shape
               Expanded(
@@ -147,6 +152,64 @@ class _TransactionTileState extends State<TransactionTile>
                         const Text(
                           'Edit',
                           style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Hide/Unhide action
+              Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+                    HapticFeedback.mediumImpact();
+                    final provider = Provider.of<TransactionProvider>(
+                      context,
+                      listen: false,
+                    );
+                    await provider.toggleHide(widget.transaction.id);
+                    if (context.mounted) {
+                      AppSnackBar.show(
+                        context,
+                        message: widget.isVaultMode
+                            ? 'Transaction unhidden'
+                            : 'Transaction hidden',
+                      );
+                    }
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF9500),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            widget.isVaultMode
+                                ? Icons.visibility_rounded
+                                : Icons.visibility_off_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          widget.isVaultMode ? 'Unhide' : 'Hide',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,

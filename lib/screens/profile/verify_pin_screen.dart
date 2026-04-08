@@ -10,7 +10,8 @@ import 'set_pin_screen.dart';
 /// Screen for verifying the current PIN before allowing changes.
 /// Displays a PIN input and validates against SecureStorageService.
 class VerifyPINScreen extends StatefulWidget {
-  const VerifyPINScreen({super.key});
+  final VoidCallback? onSuccess;
+  const VerifyPINScreen({super.key, this.onSuccess});
 
   @override
   State<VerifyPINScreen> createState() => _VerifyPINScreenState();
@@ -28,12 +29,16 @@ class _VerifyPINScreenState extends State<VerifyPINScreen> {
     if (!mounted) return;
 
     if (isValid) {
-      // Navigate to SetPINScreen on success
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => const SetPINScreen(isChanging: true),
-        ),
-      );
+      if (widget.onSuccess != null) {
+        widget.onSuccess!();
+      } else {
+        // Navigate to SetPINScreen on success
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => const SetPINScreen(isChanging: true),
+          ),
+        );
+      }
     } else {
       // Show error message and shake animation on failure
       setState(() => _errorMessage = 'Incorrect PIN. Please try again.');

@@ -13,6 +13,7 @@ import 'widgets/edit_profile_sheet.dart';
 import 'verify_pin_screen.dart';
 import 'set_pin_screen.dart';
 import 'recurring_payments_screen.dart';
+import 'vault_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -403,6 +404,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     : 'Security: None',
                 onTap: _navigateToChangePIN,
               ),
+              if (storage.securityType == 'pin')
+                SettingsCard(
+                  icon: Icons.visibility_off,
+                  iconColor: Theme.of(context).colorScheme.primary,
+                  title: 'Hidden Transactions',
+                  subtitle: 'View your secure vault',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => VerifyPINScreen(
+                          onSuccess: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (_) => const VaultScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
               
               // Appearance Section
               const SectionHeader(title: 'Appearance'),
