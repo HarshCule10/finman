@@ -100,6 +100,38 @@ class _TransactionTileState extends State<TransactionTile>
     return _isIncome ? Icons.south_west_rounded : Icons.north_east_rounded;
   }
 
+  Future<bool> _showConfirmation(
+    BuildContext context, {
+    required String title,
+    required String content,
+    required String confirmText,
+    bool isDestructive = false,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: isDestructive
+                ? TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  )
+                : null,
+            child: Text(confirmText),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -168,6 +200,18 @@ class _TransactionTileState extends State<TransactionTile>
                 child: GestureDetector(
                   onTap: () async {
                     HapticFeedback.mediumImpact();
+
+                    final confirmed = await _showConfirmation(
+                      context,
+                      title: widget.isVaultMode ? 'Unhide Transaction' : 'Hide Transaction',
+                      content: widget.isVaultMode
+                          ? 'Are you sure you want to remove this transaction from the hidden vault?'
+                          : 'Are you sure you want to move this transaction to the hidden vault?',
+                      confirmText: widget.isVaultMode ? 'Unhide' : 'Hide',
+                    );
+                    if (!confirmed) return;
+                    if (!context.mounted) return;
+
                     final provider = Provider.of<TransactionProvider>(
                       context,
                       listen: false,
@@ -226,6 +270,17 @@ class _TransactionTileState extends State<TransactionTile>
                 child: GestureDetector(
                   onTap: () async {
                     HapticFeedback.mediumImpact();
+
+                    final confirmed = await _showConfirmation(
+                      context,
+                      title: 'Delete Transaction',
+                      content: 'Are you sure you want to delete this transaction?\n\nThis action cannot be undone.',
+                      confirmText: 'Delete',
+                      isDestructive: true,
+                    );
+                    if (!confirmed) return;
+                    if (!context.mounted) return;
+
                     final provider = Provider.of<TransactionProvider>(
                       context,
                       listen: false,
